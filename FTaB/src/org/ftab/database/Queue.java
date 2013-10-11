@@ -3,11 +3,12 @@
  * Created: Oct 10, 2013
  * Author: Diego Ballesteros (diegob)
  */
-package org.ftab.server;
+package org.ftab.database;
 
 /**
- * Class that represents a queue in the system and includes minimal information
- * about it, namely the unique name and the current number of messages in it.
+ * Class that represents a queue in the database and includes minimal
+ * information about it, namely the unique name and the current number of
+ * messages in it.
  */
 public class Queue {
 

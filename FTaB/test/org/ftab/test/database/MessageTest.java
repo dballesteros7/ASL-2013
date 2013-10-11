@@ -6,6 +6,8 @@
 package org.ftab.test.database;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.sql.Connection;
@@ -15,18 +17,24 @@ import java.util.ArrayList;
 
 import org.ftab.database.Create;
 import org.ftab.database.Destroy;
+import org.ftab.database.Message;
 import org.ftab.database.client.CreateClient;
+import org.ftab.database.exceptions.InexistentClientException;
+import org.ftab.database.exceptions.InexistentQueueException;
 import org.ftab.database.message.CreateMessage;
+import org.ftab.database.message.DeleteMessage;
 import org.ftab.database.message.GetAllMessages;
+import org.ftab.database.message.RetrieveMessage;
 import org.ftab.database.queue.CreateQueue;
-import org.ftab.server.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.postgresql.ds.PGPoolingDataSource;
 
 /**
+ * Unit test for all the message related DAOs.
  * 
+ * @see org.ftab.database.message
  */
 public class MessageTest {
 
@@ -137,8 +145,9 @@ public class MessageTest {
     }
 
     /**
-     * Tests that we can retrieve messages with or without receiver and in one
-     * or more queues.
+     * Tests that we can create messages with or without receiver and in one or
+     * more queues. Also checks that we can retrieve all the messages in the
+     * system with the get-all DAO.
      * 
      * @throws SQLException
      *             if there is an unexpected database error.
@@ -147,9 +156,9 @@ public class MessageTest {
     public void testCreationSuccess() throws SQLException {
         Connection conn = null;
         try {
+            stuffDatabase(5, 2);
             conn = source.getConnection();
             conn.setAutoCommit(false);
-            stuffDatabase(5, 2);
             ArrayList<String> evenQueues = new ArrayList<String>();
             ArrayList<String> oddQueues = new ArrayList<String>();
 
@@ -195,10 +204,174 @@ public class MessageTest {
             assertEquals(queueCounts[4], 4);
             conn.commit();
         } catch (Exception ex) {
-            ex.printStackTrace();
             if (conn != null)
                 conn.rollback();
             fail("Got an exception during the test");
+        } finally {
+            if (conn != null)
+                conn.close();
+        }
+    }
+
+    /**
+     * Tests that creating a message with a non-valid receiver triggers the
+     * appropriate exception.
+     * 
+     * @throws SQLException
+     *             if there is an unexpected error accessing the database.
+     */
+    @Test
+    public void testCreationFailureNoReceiver() throws SQLException {
+        Connection conn = null;
+        try {
+            stuffDatabase(5, 2);
+            conn = source.getConnection();
+            conn.setAutoCommit(false);
+            CreateMessage cm = new CreateMessage();
+            cm.execute(1, "Client#3", "Queue#1", (short) 0, (short) 10, "FAIL",
+                    conn);
+            fail("Creating a message with inexistent receiver didn't result in an exception");
+            conn.commit();
+        } catch (InexistentClientException icex) {
+            // Success
+            conn.rollback();
+        } catch (Exception ex) {
+            if (conn != null)
+                conn.rollback();
+            fail("We failed with an unexpected exception.");
+        } finally {
+            if (conn != null)
+                conn.close();
+        }
+    }
+
+    /**
+     * Tests that creating a message with an inexistent queue triggers the
+     * appropriate exception.
+     * 
+     * @throws SQLException
+     *             if there is an unexpected error accessing the database.
+     */
+    @Test
+    public void testCreationFailureNoQueue() throws SQLException {
+        Connection conn = null;
+        try {
+            stuffDatabase(5, 2);
+            conn = source.getConnection();
+            conn.setAutoCommit(false);
+            CreateMessage cm = new CreateMessage();
+            ArrayList<String> queues = new ArrayList<String>();
+            queues.add("Queue#1");
+            queues.add("Queue#2");
+            queues.add("Queue#-1");
+            queues.add("Queue#4");
+            cm.execute(1, "Client#2", queues, (short) 0, (short) 10, "FAIL",
+                    conn);
+            fail("Creating a message with inexistent queue didn't result in an exception");
+            conn.commit();
+        } catch (InexistentQueueException iqex) {
+            // Success
+            conn.rollback();
+        } catch (Exception ex) {
+            if (conn != null)
+                conn.rollback();
+            fail("We failed with an unexpected exception.");
+        } finally {
+            if (conn != null)
+                conn.close();
+        }
+    }
+
+    /**
+     * Tests that we can delete messages in queues from the database and when
+     * the message is not in any other queue then it will be delete from the
+     * message table.
+     * 
+     * @throws SQLException
+     *             if the deletion can't be executed.
+     */
+    @Test
+    public void testDeleteMessages() throws SQLException {
+        Connection conn = null;
+        try {
+            stuffDatabase(2, 2);
+            conn = source.getConnection();
+            conn.setAutoCommit(false);
+            CreateMessage cm = new CreateMessage();
+            ArrayList<String> queues = new ArrayList<String>();
+            queues.add("Queue#1");
+            queues.add("Queue#2");
+            cm.execute(1, queues, (short) 0, (short) 1, "Disposable", conn);
+            DeleteMessage dm = new DeleteMessage();
+            dm.execute(1, 1, conn);
+            GetAllMessages gam = new GetAllMessages();
+            ArrayList<Message> result = gam.execute(conn);
+            assertEquals(result.size(), 1);
+            assertEquals(result.get(0).getQueueId(), 2);
+            assertEquals(result.get(0).getContent(), "Disposable");
+            dm.execute(1, 2, conn);
+            result = gam.execute(conn);
+            assertEquals(result.size(), 0);
+            conn.commit();
+        } catch (Exception ex) {
+            if (conn != null)
+                conn.rollback();
+        } finally {
+            if (conn != null)
+                conn.close();
+        }
+    }
+
+    /**
+     * Tests that we can peek at the messages in a queue according to different
+     * criteria and the result is sorted by either priority or timestamp.
+     * 
+     * @throws SQLException
+     *             if the queries can't be executed.
+     */
+    @Test
+    public void testRetrieveMessages() throws SQLException {
+        Connection conn = null;
+        try {
+            stuffDatabase(5, 2);
+            conn = source.getConnection();
+            conn.setAutoCommit(false);
+            CreateMessage cm = new CreateMessage();
+            RetrieveMessage rm = new RetrieveMessage();
+
+            // Test access control, checking that client 1 can't read
+            // messages addressed for client 2.
+            cm.execute(1, "Client#2", "Queue#1", (short) 0, (short) 5,
+                    "Not for you", conn);
+            Message result = rm.execute(1, "Queue#1", true, true, conn);
+            assertNull(result);
+            result = rm.execute(2, "Queue#1", true, true, conn);
+            assertNotNull(result);
+
+            // The following queries are queue based.
+            // Check retrieval by priority first
+            Thread.sleep(1000); // Timestamp precision is seconds
+            cm.execute(1, "Queue#1", (short) 0, (short) 5, "High prio", conn);
+            Thread.sleep(1000);
+            cm.execute(1, "Queue#1", (short) 0, (short) 4, "New low prio", conn);
+
+            result = rm.execute(2, "Queue#1", true, true, conn);
+            assertEquals(result.getContent(), "High prio");
+
+            // Check retrieval by timestamp first
+            result = rm.execute(2, "Queue#1", false, true, conn);
+            assertEquals(result.getContent(), "New low prio");
+
+            // Check retrieval by sender
+            result = rm.execute(2, "Client#1", true, false, conn);
+            assertEquals(result.getContent(), "High prio");
+            result = rm.execute(2, "Client#2", false, false, conn);
+            assertNull(result);
+            conn.commit();
+        } catch (Exception ex) {
+            if (conn != null)
+                conn.rollback();
+            fail("Got an exception while testing message retrieval.");
         } finally {
             if (conn != null)
                 conn.close();

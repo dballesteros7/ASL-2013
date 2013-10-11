@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import org.ftab.database.exceptions.CreateMessageException;
 import org.ftab.database.exceptions.InexistentClientException;
 import org.ftab.database.exceptions.InexistentQueueException;
 
@@ -74,11 +75,13 @@ public class CreateMessage {
      *             if one of the queue names in the list doesn't exist.
      * @throws InexistentClientException
      *             if the receiver doesn't exist.
+     * @throws CreateMessageException
+     *             if the message was not created but no error was triggered.
      */
     public void execute(int sender, String receiver, ArrayList<String> queues,
             short context, short priority, String message, Connection conn)
             throws SQLException, InexistentQueueException,
-            InexistentClientException {
+            InexistentClientException, CreateMessageException {
         PreparedStatement stmt = null;
         try {
             // Get the receiver's id and throw an exception if not found
@@ -103,7 +106,7 @@ public class CreateMessage {
             stmt.setString(6, message);
             result = stmt.executeQuery();
             if (!result.next())
-                throw new SQLException("WTF?");
+                throw new CreateMessageException();
             long message_id = result.getLong(1);
             associateMessagesToQueues(queues, message_id, conn);
         } finally {
@@ -132,10 +135,13 @@ public class CreateMessage {
      *             if there is an unexpected error accessing the database.
      * @throws InexistentQueueException
      *             if one of the queue names in the list doesn't exist.
+     * @throws CreateMessageException
+     *             if the message was not created but no error was triggered.
      */
     public void execute(int sender, ArrayList<String> queues, short context,
             short priority, String message, Connection conn)
-            throws SQLException, InexistentQueueException {
+            throws SQLException, InexistentQueueException,
+            CreateMessageException {
         PreparedStatement stmt = null;
         try {
 
@@ -150,7 +156,7 @@ public class CreateMessage {
             stmt.setString(5, message);
             ResultSet result = stmt.executeQuery();
             if (!result.next())
-                throw new SQLException("WTF?");
+                throw new CreateMessageException();
             long message_id = result.getLong(1);
             associateMessagesToQueues(queues, message_id, conn);
         } finally {
@@ -183,11 +189,13 @@ public class CreateMessage {
      *             if one of the queue names in the list doesn't exist.
      * @throws InexistentClientException
      *             if the receiver doesn't exist.
+     * @throws CreateMessageException
+     *             if the message was not created but no error was triggered.
      */
     public void execute(int sender, String receiver, String queue,
             short context, short priority, String message, Connection conn)
             throws SQLException, InexistentQueueException,
-            InexistentClientException {
+            InexistentClientException, CreateMessageException {
         ArrayList<String> queues = new ArrayList<String>();
         queues.add(queue);
         execute(sender, receiver, queues, context, priority, message, conn);
@@ -212,10 +220,13 @@ public class CreateMessage {
      *             if there is an unexpected error accessing the database.
      * @throws InexistentQueueException
      *             if one of the queue names in the list doesn't exist.
+     * @throws CreateMessageException
+     *             if the message was not created but no error was triggered.
      */
     public void execute(int sender, String queue, short context,
             short priority, String message, Connection conn)
-            throws SQLException, InexistentQueueException {
+            throws SQLException, InexistentQueueException,
+            CreateMessageException {
         ArrayList<String> queues = new ArrayList<String>();
         queues.add(queue);
         execute(sender, queues, context, priority, message, conn);

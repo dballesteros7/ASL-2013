@@ -6,11 +6,11 @@
 package org.ftab.database.client;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-import org.ftab.server.Client;
+import org.ftab.database.Client;
 
 /**
  * DAO for retrieving an user from the database.
@@ -21,7 +21,7 @@ public class FetchClient {
      * SQL statement to be executed by this DAO
      */
     private static final String SQL = "SELECT id, online FROM client "
-            + "WHERE username = '?'";
+            + "WHERE username = ?";
 
     /**
      * Retrieve a client given its username
@@ -36,17 +36,18 @@ public class FetchClient {
      *             if a problem occurs while executing the query in the
      *             database.a
      */
-    public Client execute(String username, Connection conn)
-            throws SQLException {
-        Statement stmt = null;
+    public Client execute(String username, Connection conn) throws SQLException {
+        PreparedStatement stmt = null;
         try {
-            stmt = conn.createStatement();
-            ResultSet result = stmt.executeQuery(SQL.replace("?", username));
+            stmt = conn.prepareStatement(SQL);
+            stmt.setString(1, username);
+            ResultSet result = stmt.executeQuery();
             if (!result.next()) {
                 return null;
             } else {
-                Client formattedResult = new Client(result.getInt(1),
-                        username, result.getBoolean(2));
+                Client formattedResult =
+                        new Client(result.getInt(1), username,
+                                result.getBoolean(2));
                 return formattedResult;
             }
         } finally {

@@ -3,7 +3,7 @@
  * Created: Oct 10, 2013
  * Author: Diego Ballesteros (diegob)
  */
-package org.ftab.server;
+package org.ftab.database;
 
 /**
  * Class that represents a client, i.e. a component in the first tier of the

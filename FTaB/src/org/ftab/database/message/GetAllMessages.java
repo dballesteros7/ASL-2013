@@ -11,12 +11,20 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import org.ftab.server.Message;
+import org.ftab.database.Message;
 
 /**
+ * DAO to retrieve all messages in the database, sorted by priority. The
+ * information provided with the message is the same as defined in the Message
+ * class.
  * 
+ * @see org.ftab.database.Message
  */
 public class GetAllMessages {
+    /**
+     * SQL statement to retrieve all messages and their information sorted by
+     * priority.
+     */
     private final static String SQL = "SELECT message.id AS msg_id, "
             + "queue.id AS queue_id, context, prio, create_time, message,"
             + "rc.username AS receiver, sc.username AS sender, queue.name "
@@ -27,6 +35,16 @@ public class GetAllMessages {
             + "LEFT OUTER JOIN client rc ON rc.id = message.receiver "
             + "ORDER BY prio DESC";
 
+    /**
+     * Execute the query to retrieve all messages and return a list with all the
+     * Message objects.
+     * 
+     * @param conn
+     *            database connection.
+     * @return list with all the messages in the database.
+     * @throws SQLException
+     *             if there is an unexpected error while accessing the database.
+     */
     public ArrayList<Message> execute(Connection conn) throws SQLException {
         PreparedStatement stmt = null;
         ArrayList<Message> formattedResult = new ArrayList<Message>();
