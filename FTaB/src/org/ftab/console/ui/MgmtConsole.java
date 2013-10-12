@@ -27,7 +27,7 @@ public class MgmtConsole  {
      * Connection to be used 
      */
     
-	private JFrame frame;
+	private JFrame frmManagementConsole;
 	
 
 	/**
@@ -37,8 +37,16 @@ public class MgmtConsole  {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					Runtime.getRuntime().addShutdownHook(new Thread() {
+						@Override
+						public void run() {
+							if (source != null)
+								source.close();
+						}
+					});
+					
 					MgmtConsole window = new MgmtConsole();
-					window.frame.setVisible(true);
+					window.frmManagementConsole.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -59,17 +67,20 @@ public class MgmtConsole  {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		frame = new JFrame();
-		frame.setBounds(100, 100, 633, 468);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmManagementConsole = new JFrame();
+		frmManagementConsole.setTitle("Management Console");
+		frmManagementConsole.setBounds(100, 100, 633, 468);
+		frmManagementConsole.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		frame.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+		frmManagementConsole.getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 		tabbedPane.addTab("Clients", new ClientsPanel());
+		tabbedPane.addTab("Queues", new QueuesPanel());
+		tabbedPane.addTab("Messages", new MessagesPanel());
 		
 		JMenuBar menuBar = new JMenuBar();
-		frame.setJMenuBar(menuBar);
+		frmManagementConsole.setJMenuBar(menuBar);
 		
 		JMenu mnSettings = new JMenu("Settings");
 		menuBar.add(mnSettings);
