@@ -32,18 +32,19 @@ public class RetrieveClients {
      * @throws SQLException
      *             if the information can't be retrieved.
      */
-    public ArrayList<Client> execute(Connection conn) throws SQLException {
+    public static ArrayList<Client> execute(Connection conn)
+            throws SQLException {
         PreparedStatement stmt = null;
         ArrayList<Client> formattedResult = new ArrayList<Client>();
         try {
             stmt = conn.prepareStatement(SQL);
             ResultSet result = stmt.executeQuery();
             while (result.next()) {
-                Client client =
-                        new Client(result.getInt(1), result.getString(2),
-                                result.getBoolean(3));
+                Client client = new Client(result.getInt(1),
+                        result.getString(2), result.getBoolean(3));
                 formattedResult.add(client);
             }
+            conn.commit();
             return formattedResult;
         } finally {
             if (stmt != null)

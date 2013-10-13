@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ServerManager>
+    <WorkerThreads>5</WorkerThreads>
+    <ClientsPerWorker>2</ClientsPerWorker>
+    <DatabaseConnections>5</DatabaseConnections>
+    <LoggingLevel>DEBUG</LoggingLevel>
+    <LogOutput>C:\Users\Diego\Documents\Logs\serverlog%g.log</LogOutput>
+    <ListeningPort>8432</ListeningPort>        
+</ServerManager>

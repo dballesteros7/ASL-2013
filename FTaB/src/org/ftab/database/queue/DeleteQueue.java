@@ -45,8 +45,9 @@ public class DeleteQueue {
      * @throws QueueNotEmptyException
      *             if the queue is not empty.
      */
-    public void execute(String queueName, Connection conn) throws SQLException,
-            InexistentQueueException, QueueNotEmptyException {
+    public static void execute(String queueName, Connection conn)
+            throws SQLException, InexistentQueueException,
+            QueueNotEmptyException {
         PreparedStatement query = null;
         PreparedStatement update = null;
         try {

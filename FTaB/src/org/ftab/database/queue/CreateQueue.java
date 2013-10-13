@@ -31,8 +31,8 @@ public class CreateQueue {
      * @throws QueueAlreadyExistsException
      *             if there is already a queue with the given name.
      */
-    public void execute(String queueName, Connection conn) throws SQLException,
-            QueueAlreadyExistsException {
+    public static void execute(String queueName, Connection conn)
+            throws SQLException, QueueAlreadyExistsException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(SQL);

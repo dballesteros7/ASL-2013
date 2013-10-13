@@ -99,7 +99,7 @@ public class Create {
      * @throws SQLException
      *             if the query can't be added to the statement.
      */
-    private void createClientTable(Statement stmt) throws SQLException {
+    private static void createClientTable(Statement stmt) throws SQLException {
         stmt.addBatch(SQL01_CREATE_CLIENT);
     }
 
@@ -112,7 +112,7 @@ public class Create {
      * @throws SQLException
      *             if the query can't be added to the statement.
      */
-    private void createQueueTable(Statement stmt) throws SQLException {
+    private static void createQueueTable(Statement stmt) throws SQLException {
         stmt.addBatch(SQL01_CREATE_QUEUE);
     }
 
@@ -126,7 +126,7 @@ public class Create {
      * @throws SQLException
      *             if the queries can't be added to the statement.
      */
-    private void createMessageTable(Statement stmt) throws SQLException {
+    private static void createMessageTable(Statement stmt) throws SQLException {
         stmt.addBatch(SQL02_CREATE_MSG);
         stmt.addBatch(SQL03_CREATE_MSG_QUEUE_ASSOC);
         stmt.addBatch(SQL03_MSG_PRIO_IDX);
@@ -152,7 +152,7 @@ public class Create {
      * @throws SQLException
      *             if the table creation fails.
      */
-    public void execute(boolean client, boolean queue, boolean msg,
+    public static void execute(boolean client, boolean queue, boolean msg,
             Connection conn) throws SQLException {
         Statement stmt = null;
         try {

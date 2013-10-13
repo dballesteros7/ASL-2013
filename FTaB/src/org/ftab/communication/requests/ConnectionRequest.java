@@ -89,7 +89,7 @@ public class ConnectionRequest extends ProtocolMessage {
 			buffer.put(usernameBytes);
 		}
 		
-		buffer.flip();		
+		buffer.flip();
 		return buffer;
 	}
 	
