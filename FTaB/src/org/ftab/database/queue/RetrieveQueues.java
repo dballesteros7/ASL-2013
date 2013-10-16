@@ -22,7 +22,7 @@ public class RetrieveQueues {
             + "queue LEFT OUTER JOIN msg_queue_assoc "
             + "ON queue_id = id GROUP BY name";
 
-    public ArrayList<Queue> execute(Connection conn) throws SQLException {
+    public static ArrayList<Queue> execute(Connection conn) throws SQLException {
         PreparedStatement stmt = null;
         ArrayList<Queue> formattedResult = new ArrayList<Queue>();
         try {

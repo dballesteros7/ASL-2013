@@ -40,10 +40,9 @@ public class CreateMessage {
     /**
      * SQL statement to insert association records between queues and messages.
      */
-    private final static String SQL_ASSOC_QUEUE =
-            "INSERT INTO msg_queue_assoc "
-                    + "(message_id, queue_id) VALUES (?, "
-                    + "(SELECT id FROM queue WHERE name = ?))";
+    private final static String SQL_ASSOC_QUEUE = "INSERT INTO msg_queue_assoc "
+            + "(message_id, queue_id) VALUES (?, "
+            + "(SELECT id FROM queue WHERE name = ?))";
     /**
      * SQL statement to retrieve a client id given its username.
      */
@@ -78,10 +77,11 @@ public class CreateMessage {
      * @throws CreateMessageException
      *             if the message was not created but no error was triggered.
      */
-    public void execute(int sender, String receiver, ArrayList<String> queues,
-            short context, short priority, String message, Connection conn)
-            throws SQLException, InexistentQueueException,
-            InexistentClientException, CreateMessageException {
+    public static void execute(int sender, String receiver,
+            Iterable<String> queues, short context, short priority,
+            String message, Connection conn) throws SQLException,
+            InexistentQueueException, InexistentClientException,
+            CreateMessageException {
         PreparedStatement stmt = null;
         try {
             // Get the receiver's id and throw an exception if not found
@@ -138,8 +138,8 @@ public class CreateMessage {
      * @throws CreateMessageException
      *             if the message was not created but no error was triggered.
      */
-    public void execute(int sender, ArrayList<String> queues, short context,
-            short priority, String message, Connection conn)
+    public static void execute(int sender, Iterable<String> queues,
+            short context, short priority, String message, Connection conn)
             throws SQLException, InexistentQueueException,
             CreateMessageException {
         PreparedStatement stmt = null;
@@ -192,7 +192,7 @@ public class CreateMessage {
      * @throws CreateMessageException
      *             if the message was not created but no error was triggered.
      */
-    public void execute(int sender, String receiver, String queue,
+    public static void execute(int sender, String receiver, String queue,
             short context, short priority, String message, Connection conn)
             throws SQLException, InexistentQueueException,
             InexistentClientException, CreateMessageException {
@@ -223,7 +223,7 @@ public class CreateMessage {
      * @throws CreateMessageException
      *             if the message was not created but no error was triggered.
      */
-    public void execute(int sender, String queue, short context,
+    public static void execute(int sender, String queue, short context,
             short priority, String message, Connection conn)
             throws SQLException, InexistentQueueException,
             CreateMessageException {
@@ -248,7 +248,7 @@ public class CreateMessage {
      * @throws InexistentQueueException
      *             if one of the queues in the list doesn't exist.
      */
-    private void associateMessagesToQueues(ArrayList<String> queues,
+    private static void associateMessagesToQueues(Iterable<String> queues,
             long message_id, Connection conn) throws SQLException,
             InexistentQueueException {
         PreparedStatement stmt = null;

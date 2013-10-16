@@ -36,7 +36,7 @@ public class FetchClient {
      *             if a problem occurs while executing the query in the
      *             database.a
      */
-    public Client execute(String username, Connection conn) throws SQLException {
+    public static Client execute(String username, Connection conn) throws SQLException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement(SQL);
