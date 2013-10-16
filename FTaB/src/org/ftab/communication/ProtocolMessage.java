@@ -181,7 +181,7 @@ public abstract class ProtocolMessage {
     	ByteBuffer messageBuffer = ByteBuffer.allocate(bodyBuffer.remaining() + HEADER_SIZE + 1);
     	
     	// Put the header
-    	messageBuffer.put(START_MESSAGE).putInt(bodyBuffer.remaining());
+    	messageBuffer.put(START_MESSAGE).putInt(bodyBuffer.remaining() + 1);
     	
     	// Put the message type
     	messageBuffer.put(message.getMessageType().getByteValue());    	
