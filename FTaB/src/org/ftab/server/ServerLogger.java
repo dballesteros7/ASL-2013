@@ -137,7 +137,7 @@ public class ServerLogger extends Formatter {
      */
     private String calcDate(long millisecs) {
         SimpleDateFormat date_format = new SimpleDateFormat(
-                "MM-dd-yyyy HH:mm:SSS");
+                "MM-dd HH:mm:ss.SSS");
         Date resultdate = new Date(millisecs);
         return date_format.format(resultdate);
     }
