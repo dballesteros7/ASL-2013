@@ -16,13 +16,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
+import org.ftab.database.Client;
 import org.ftab.database.Create;
 import org.ftab.database.Destroy;
 import org.ftab.database.client.ChangeClientStatus;
 import org.ftab.database.client.CreateClient;
 import org.ftab.database.client.FetchClient;
 import org.ftab.database.client.RetrieveClients;
-import org.ftab.server.Client;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

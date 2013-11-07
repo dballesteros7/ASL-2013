@@ -10,7 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.ftab.server.Message;
+import org.ftab.database.Message;
 
 /**
  * DAO for peeking at messages in the database, in every realization of this DAO
@@ -66,8 +66,8 @@ public class RetrieveMessage {
     private final static String SQL_PEEK_BY_QUEUE_PRIO =
             "SELECT message.id AS msg_id, queue.id AS queue_id, context, prio, "
                     + "create_time, message, queue.name, "
-                    + "sc.username AS sender, rc.username AS receiver"
-                    + "FROM message " + "INNER JOIN msg_queue_assoc "
+                    + "sc.username AS sender, rc.username AS receiver "
+                    + "FROM message INNER JOIN msg_queue_assoc "
                     + "ON msg_queue_assoc.message_id = message.id "
                     + "INNER JOIN queue ON queue_id = queue.id "
                     + "INNER JOIN client sc ON sc.id = sender "
@@ -85,8 +85,8 @@ public class RetrieveMessage {
     private final static String SQL_PEEK_BY_QUEUE_TIME =
             "SELECT message.id AS msg_id, queue.id AS queue_id, context, prio, "
                     + "create_time, message, queue.name, "
-                    + "sc.username AS sender, rc.username AS receiver"
-                    + "FROM message " + "INNER JOIN msg_queue_assoc "
+                    + "sc.username AS sender, rc.username AS receiver "
+                    + "FROM message INNER JOIN msg_queue_assoc "
                     + "ON msg_queue_assoc.message_id = message.id "
                     + "INNER JOIN queue ON queue_id = queue.id "
                     + "INNER JOIN client sc ON sc.id = sender "

@@ -43,6 +43,7 @@ public class DeleteQueue {
      * @throws InexistentQueueException
      *             if there is no queue with the given name.
      * @throws QueueNotEmptyException
+     *             if the queue is not empty.
      */
     public void execute(String queueName, Connection conn) throws SQLException,
             InexistentQueueException, QueueNotEmptyException {

@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import org.ftab.server.Queue;
+import org.ftab.database.Queue;
 
 /**
  * DAO to retrieve information about all queues in the system for the management
@@ -19,18 +19,17 @@ import org.ftab.server.Queue;
  */
 public class RetrieveQueues {
     private static final String SQL = "SELECT name, COUNT(message_id) FROM "
-            + "queue INNER JOIN msg_queue_assoc ON queue_id = id GROUP BY name";
+            + "queue LEFT OUTER JOIN msg_queue_assoc "
+            + "ON queue_id = id GROUP BY name";
 
-    public ArrayList<Queue> execute(Connection conn)
-            throws SQLException {
+    public ArrayList<Queue> execute(Connection conn) throws SQLException {
         PreparedStatement stmt = null;
         ArrayList<Queue> formattedResult = new ArrayList<Queue>();
         try {
             stmt = conn.prepareStatement(SQL);
             ResultSet result = stmt.executeQuery();
-            while(result.next()){
-                Queue next = new Queue(result.getString(1),
-                        result.getLong(2));
+            while (result.next()) {
+                Queue next = new Queue(result.getString(1), result.getLong(2));
                 formattedResult.add(next);
             }
             return formattedResult;

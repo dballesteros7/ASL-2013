@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import org.ftab.server.Client;
+import org.ftab.database.Client;
 
 /**
  * DAO for retrieving a snapshot of the client table in the database.
@@ -39,8 +39,9 @@ public class RetrieveClients {
             stmt = conn.prepareStatement(SQL);
             ResultSet result = stmt.executeQuery();
             while (result.next()) {
-                Client client = new Client(result.getInt(1),
-                        result.getString(2), result.getBoolean(3));
+                Client client =
+                        new Client(result.getInt(1), result.getString(2),
+                                result.getBoolean(3));
                 formattedResult.add(client);
             }
             return formattedResult;
