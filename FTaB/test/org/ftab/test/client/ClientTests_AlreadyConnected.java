@@ -3,6 +3,7 @@ package org.ftab.test.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -78,7 +79,11 @@ public class ClientTests_AlreadyConnected {
 			@Override
 			public void run() {
 				client = new Client("bob");
-				client.Connect("localhost", portNumber);
+				try {
+					client.Connect("localhost", portNumber);
+				} catch (Exception e) {
+					fail("Failure during setup...");
+				}
 			}
 		}, Boolean.TRUE);
 		
@@ -116,8 +121,12 @@ public class ClientTests_AlreadyConnected {
 		Future<Boolean> result = service.submit(new Runnable() {
 			@Override
 			public void run() {
-				assertFalse(client.Disconnect());
-				assertTrue(client.Disconnect());
+				try {
+					assertFalse(client.Disconnect());
+					assertTrue(client.Disconnect());
+				} catch (Exception e){ 
+					fail("Exception should not be thrown"); 
+				}
 			}
 		}, Boolean.TRUE);
 		
@@ -162,12 +171,14 @@ public class ClientTests_AlreadyConnected {
 		Future<Boolean> result = service.submit(new Runnable() {
 			@Override
 			public void run() {
+				try {
 				assertTrue(client.SendMessage(messages[0], priorities[0], contexts[0], 
-						Arrays.asList(queues[0])));
+						queues[0]));
 				assertTrue(client.SendMessage(messages[1], priorities[1], contexts[1], 
-						Arrays.asList(queues[1]), receivers[1]));
+						receivers[1], queues[1]));
 				assertFalse(client.SendMessage(messages[2], priorities[2], contexts[2], 
-						Arrays.asList(queues[2]), receivers[2]));
+						receivers[2], queues[2]));
+				} catch (Exception e) { fail("Exceptions should not be thrown."); }
 			}
 		}, Boolean.TRUE);
 		
@@ -228,9 +239,17 @@ public class ClientTests_AlreadyConnected {
 					boolean result = i > 2 ? false : true; 
 					
 					if (i % 2 == 0) {
-						assertEquals(result, client.CreateQueue(names[i]));
+						try {
+							assertEquals(result, client.CreateQueue(names[i]));
+						} catch (Exception e) {
+							fail("Exception was thrown");
+						} 
 					} else {
-						assertEquals(result, client.DeleteQueue(names[i]));
+						try {
+							assertEquals(result, client.DeleteQueue(names[i]));
+						} catch (Exception e) {
+							fail("Exception was thrown");
+						}
 					}
 				}
 			}
@@ -268,7 +287,12 @@ public class ClientTests_AlreadyConnected {
 			@Override
 			public void run() {
 				for (int i = 0; i < results.length; i ++) {
-					ArrayList<String> queues = (ArrayList<String>) client.GetWaitingQueues();
+					ArrayList<String> queues = null;
+					try {
+						queues = (ArrayList<String>) client.GetWaitingQueues();
+					} catch (Exception e) {
+						fail("Exception was thrown.");
+					}
 					
 					if (i == 2) assertEquals(results[i], queues);
 					else {

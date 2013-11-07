@@ -1,24 +1,27 @@
 package org.ftab.client;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
+import java.util.logging.Logger;
 
-import org.ftab.communication.ProtocolMessage;
-import org.ftab.communication.ProtocolMessage.MessageType;
+import org.ftab.client.exceptions.AlreadyOnlineException;
+import org.ftab.client.exceptions.ClientInexistentException;
+import org.ftab.client.exceptions.FullServerException;
+import org.ftab.client.exceptions.QueueInexistentException;
+import org.ftab.client.exceptions.QueueNotEmptyException;
+import org.ftab.client.exceptions.UnspecifiedErrorException;
+import org.ftab.client.serverrpc.ServerRPC;
 import org.ftab.communication.exceptions.InvalidHeaderException;
-import org.ftab.communication.requests.ConnectionRequest;
-import org.ftab.communication.requests.GetQueuesRequest;
-import org.ftab.communication.requests.QueueModificationRequest;
-import org.ftab.communication.requests.RetrieveMessageRequest;
-import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
-import org.ftab.communication.requests.RetrieveMessageRequest.Order;
-import org.ftab.communication.requests.SendMessageRequest;
 import org.ftab.communication.requests.SendMessageRequest.Context;
-import org.ftab.communication.responses.GetQueuesResponse;
-import org.ftab.communication.responses.RequestResponse;
-import org.ftab.communication.responses.RetrieveMessageResponse;
+import org.ftab.database.exceptions.QueueAlreadyExistsException;
+import org.ftab.logging.client.ClientConnectionRecord;
+import org.ftab.logging.client.ClientDisconRecord;
+import org.ftab.logging.client.GetMessageLogRecord;
+import org.ftab.logging.client.QueueCreateLogRecord;
+import org.ftab.logging.client.QueueDeleteLogRecord;
+import org.ftab.logging.client.SendMsgLogRecord;
+import org.ftab.logging.client.WaitingQueuesLogRecord;
+import org.ftab.pubenums.Filter;
+import org.ftab.pubenums.Order;
 
 /**
  * The api for making calls as a client
@@ -27,24 +30,66 @@ import org.ftab.communication.responses.RetrieveMessageResponse;
  */
 public class Client {
 	/**
-	 * Socket channel to be used for connections to the server
+	 * Boolean indicating whether errors should be suppressed.
 	 */
-	private SocketChannel channelToServer;
+	private boolean suppressingErrors = true;	
 	
 	/**
 	 * The sting that represents the user's login information
 	 */
-	//TODO: Make a getter and return to private
-	public final String username;
+	private final String username;
 	
+	/**
+	 * The remote server being communicated with by this client
+	 */
+	private ServerRPC server;
+	
+	/**
+	 * The logger used by the client
+	 */
+	private static final Logger LOGGER = Logger.getLogger(Client.class.getName());
+		
 	/**
 	 * Creates a new instance of a client with the specified name
 	 * @param clientName 
 	 */
 	public Client(String clientName) {
 		this.username = clientName;
-		
-		// TODO: Log the successful creation
+		this.suppressingErrors = true;
+	}
+	
+	/**
+	 * Gets the username assigned to this client at creation.
+	 * @return The assigned username
+	 */
+	public String getUsername() {
+		return username;
+	}
+	
+	/**
+	 * Gets whether errors are being suppressed.
+	 * @return True if errors will not be thrown by the methods, false otherwise
+	 */
+	public boolean isSuppressingErrors() {
+		return suppressingErrors;
+	}
+	
+	/**
+	 * Sets whether exceptions should be suppressed by the client
+	 * @param suppressingErrors True to suppress exceptions from being thrown, false otherwise.
+	 */
+	public void setSuppressingErrors(boolean suppressingErrors) {
+		this.suppressingErrors = suppressingErrors;
+	}
+	
+	/**
+	 * Ascertains whether the client is connected to 
+	 * a server or not
+	 * @return True if the client is connected, false otherwise.
+	 */
+	public boolean isConnected() {
+		if (server == null) return false;
+		else return server.isConnectionOpen();
 	}
 	
 	/**
@@ -53,77 +98,79 @@ public class Client {
 	 * to connect to.
 	 * @param port The port to connect to.
 	 * @return True if the connection was successful, false otherwise
+	 * @throws FullServerException If the server is full
+	 * @throws AlreadyOnlineException If the client is already online
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws IOException If an error occurred with the channel
+	 * @throws InvalidHeaderException If the input data was somehow corrupted
 	 */
-	public boolean Connect(String serverIPv4, int port) {
-		// Attempt to close any existing channels
-		if (channelToServer != null) {
-			try {
-				channelToServer.close();
-			} catch (IOException e) { 
-				e.printStackTrace();
-			} finally {
-				channelToServer = null;
-			}
-		}
-
+	public boolean Connect(String serverIPv4, int port) 
+			throws IOException, UnspecifiedErrorException, InvalidHeaderException, FullServerException, AlreadyOnlineException {
+		// Create the server
+		this.server = new ServerRPC(serverIPv4, port);		
+		
+		// Log the start of the attempt
+		final ClientConnectionRecord record = new ClientConnectionRecord(this);
+		LOGGER.log(record);
+				
 		try {
-			// Create the new socket channel
-			channelToServer = SocketChannel.open(new InetSocketAddress(serverIPv4, port));
-			
-			// Attempt to write the request to the channel
-			this.sendMessage(new ConnectionRequest(this.username, true));
-			
-			RequestResponse msg = (RequestResponse) this.getResponse();
-			
-			switch (msg.getStatus()) {
-			case SUCCESS:
-				// TODO: Log the success
-				return true;
-			default:
-				// TODO: Log the failure using the status
-				return false;
-			}			
-		} catch (IOException e) {
-			// TODO: Log the failed connection attempt
+			server.Connect(this);
 
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new ClientConnectionRecord(this, record.getMillis()));
+			return true;
+		} catch (IOException e) {
+			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			e.printStackTrace();
-			return false;
-		}			
+			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (FullServerException e) {
+			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (AlreadyOnlineException e) {
+			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		}
+		
+		return false;
 	}
 	
 	/**
 	 * Disconnects the client from a remote server and closes the channel
 	 * between the client and the server
 	 * @return True if the disconnection was successful, false otherwise.
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws IOException If an error occurred with the channel
+	 * @throws InvalidHeaderException If the input data was somehow corrupted
 	 */
-	public boolean Disconnect() {
+	public boolean Disconnect() throws InvalidHeaderException, IOException, UnspecifiedErrorException {
+		// Log the start of the attempt
+		final ClientDisconRecord record = new ClientDisconRecord(this);
+		LOGGER.log(record);
+		
 		try {
-			// Attempt to log out from the server
-			this.sendMessage(new ConnectionRequest(this.username, false));
-			RequestResponse response = (RequestResponse) this.getResponse();
-			
-			switch(response.getStatus()) {
-			case SUCCESS:
-				// TODO: Log the disconnection success
-				return true;
-			default:
-				// TODO: Log the disconnection failure
-				return false;
-			}
-			
-		} catch (IOException e) {
-			// TODO: Log the failed disconnection attempt
-			e.printStackTrace();
-			return false;
-		} catch (InvalidHeaderException e) {
-			// TODO: Assuming success?
-			// TODO: Log the disconnection success
-			e.printStackTrace();
+			server.Disconnect(this);
+		
+			LOGGER.log(new ClientDisconRecord(this, record.getMillis()));
 			return true;
-		}		
+		} catch (IOException e) {
+			LOGGER.log(new ClientDisconRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (InvalidHeaderException e) {
+			LOGGER.log(new ClientDisconRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+			
+			// Assume the attempt was successful
+			return true;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new ClientDisconRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		}
+		
+		return false;
 	}
 
 	/**
@@ -132,77 +179,108 @@ public class Client {
 	 * @param message The string message to be sent.
 	 * @param priority The priority of the message
 	 * @param context The context of the message
-	 * @param queues The queue or queues to which to send the messages
 	 * @param receiver The designated receiver of the message
+	 * @param queues The queue or queues to which to send the messages
 	 * @return True if the message is sent successfully, false otherwise
+	 * @throws QueueInexistentException If at least one of the queues does not exist
+	 * @throws ClientInexistentException If the receiver does not exist
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws IOException If an error occurred with the channel
+	 * @throws InvalidHeaderException If the input data was somehow corrupted
 	 */
-	public boolean SendMessage(String message, byte priority, Context context, Iterable<String> queues, String receiver) {
+	public boolean SendMessage(String message, byte priority, Context context, String receiver, String... queues) 
+			throws QueueInexistentException, UnspecifiedErrorException, ClientInexistentException, IOException, InvalidHeaderException {
+		
+		final Message msg = new Message(context, priority, message, this.getUsername(), receiver, queues);
+		
+		/* Log the start of the attempt */
+		final SendMsgLogRecord record = new SendMsgLogRecord(this, msg);
+		LOGGER.log(record);
+		
 		try {
-			this.sendMessage(new SendMessageRequest(message, priority, context, queues, receiver));
+			server.PushMessage(msg);
 			
-			RequestResponse msg = (RequestResponse) this.getResponse();
-			
-			switch(msg.getStatus()) {
-			case SUCCESS:
-				// TODO: Log the success
-				return true;
-			default:
-				// TODO: Log the failure using the status
-				return false;
-			}			
-			
+			LOGGER.log(new SendMsgLogRecord(this, msg, record.getMillis()));
+			return true;
+		
+			/* Log the failed attempt */
+		} catch (QueueInexistentException e) {
+			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (ClientInexistentException e) {
+			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (IOException e) {
-			// TODO Log the IO Exception
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		}
+		
+		return false;
 	}
 	
 	/**
-	 * Sends a message from this client to one or more queues without a desingated 
+	 * Sends a message from this client to one or more queues without a designated 
 	 * receiver.
 	 * @param message The string message to be sent.
 	 * @param priority The priority of the message
 	 * @param context The context of the message
 	 * @param queues The queue or queues to which to send the messages
 	 * @return True if the message is sent successfully, false otherwise
+	 * @throws QueueInexistentException If at least one of the queues does not exist
+	 * @throws ClientInexistentException If the receiver does not exist
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws IOException If an error occurred with the channel
+	 * @throws InvalidHeaderException If the input data was somehow corrupted
 	 */
-	public boolean SendMessage(String message, byte priority, Context context, Iterable<String> queues) {
-		return this.SendMessage(message, priority, context, queues, null);
+	public boolean SendMessage(String message, byte priority, Context context, String... queues) 
+			throws QueueInexistentException, UnspecifiedErrorException, ClientInexistentException, IOException, InvalidHeaderException {
+		return this.SendMessage(message, priority, context, null, queues);
 	}
 	
 	/**
 	 * Requests that a named queue be deleted from the system
 	 * @param queueName The name of the queue to be deleted.
 	 * @return True if the queue was deleted, false otherwise.
+	 * @throws IOException If an error occurred with the channel
+	 * @throws InvalidHeaderException If the input data was somehow corrupted
+	 * @throws QueueInexistentException If the queue to be deleted does not exist
+	 * @throws QueueNotEmptyException If the queue to be deleted is not empty
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 */
-	public boolean DeleteQueue(String queueName) {
+	public boolean DeleteQueue(String queueName) 
+			throws InvalidHeaderException, QueueInexistentException, QueueNotEmptyException, 
+			UnspecifiedErrorException, IOException {
+		final QueueDeleteLogRecord record = new QueueDeleteLogRecord(this, queueName);
+		LOGGER.log(record);
+		
 		try {
-			this.sendMessage(new QueueModificationRequest(queueName, true));
-		
-			RequestResponse msg = (RequestResponse) this.getResponse();
+			server.DeleteQueue(queueName);
 			
-			switch(msg.getStatus()) {
-			case SUCCESS:
-				// TODO: Log the success
-				return true;
-			default:
-				// TODO: Log the failure using the status
-				return false;
-			}
-		
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, record.getMillis()));
+			return true;
+		} catch (QueueInexistentException e) {
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (QueueNotEmptyException e) {
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		}
+		return false;
 	}
 	
 	/**
@@ -210,77 +288,81 @@ public class Client {
 	 * specified name.
 	 * @param queueName The name of the queue to create
 	 * @return True if the queue was created successfully, false otherwise.
+	 * @throws QueueAlreadyExistsException If the queue already exists
+	 * @throws IOException If an error occurred on the channel
+	 * @throws InvalidHeaderException If the response was somehow corrupted
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 */
-	public boolean CreateQueue(String queueName) {
+	public boolean CreateQueue(String queueName) 
+			throws UnspecifiedErrorException, QueueAlreadyExistsException, IOException, InvalidHeaderException {
+		final QueueCreateLogRecord record = new QueueCreateLogRecord(this, queueName);
+		LOGGER.log(record);
+		
 		try {
-			this.sendMessage(new QueueModificationRequest(queueName, false));
-		
-			RequestResponse msg = (RequestResponse) this.getResponse();
+			server.CreateQueue(queueName);
 			
-			switch(msg.getStatus()) {
-			case SUCCESS:
-				// TODO: Log the success
-				return true;
-			default:
-				// TODO: Log the failure using the status
-				return false;
-			}
-		
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, record.getMillis()));
+			return true;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (QueueAlreadyExistsException e) {
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		}
+		return false;
 	}
-	
+
 	/**
 	 * Gets the queues that have messages waiting for the client.
 	 * @return An Iterable containing the names of the queues with messages waiting
 	 * for the client, or null if an error occurred or if there are no queues.
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws IOException If an error occurred on the channel
+	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 */
-	public Iterable<String> GetWaitingQueues() {
+	public Iterable<String> GetWaitingQueues() 
+			throws UnspecifiedErrorException, IOException, InvalidHeaderException {
+		final WaitingQueuesLogRecord record = new WaitingQueuesLogRecord(this);
+		LOGGER.log(record);
+		
 		try {
-			this.sendMessage(new GetQueuesRequest());
+			Iterable<String> result = server.GetWaitingQueues(this);
 			
-			ProtocolMessage message = this.getResponse();
-			
-			if (message.getMessageType() == MessageType.RETURNED_QUEUE) {
-				return ((GetQueuesResponse)message).getQueues();
-			} else {
-				RequestResponse failureResponse = (RequestResponse) message;
-				switch (failureResponse.getStatus()) {
-				case NO_QUEUE:
-					// TODO: Log the reason that there were no queues to fetch
-					return null;
-				default:
-					// TODO: Log the reason for the failure
-					return null;
-				}
-			}			
+			LOGGER.log(new WaitingQueuesLogRecord(this, result, record.getMillis()));
+			return result;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new WaitingQueuesLogRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			LOGGER.log(new WaitingQueuesLogRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			LOGGER.log(new WaitingQueuesLogRecord(this, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		}
 		
+		return null;
 	}
-	
 	
 	/**
 	 * Retrieves a message from a queue
 	 * @param queueName The name of the queue from which to retrieve the message
 	 * @param andRemove Whether to delete the message after retrieving it.
 	 * @return The message with the highest priority in that queue
+	 * @throws IOException If an error occurred on the channel
+	 * @throws QueueInexistentException If the filter specified was a queue and it does not exist
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 */
-	public Message ViewMessageFromQueue(String queueName, boolean andRemove) {
+	public Message ViewMessageFromQueue(String queueName, boolean andRemove) 
+			throws QueueInexistentException, UnspecifiedErrorException, InvalidHeaderException, IOException {
 		return ViewMessageFromQueue(queueName, andRemove, Order.PRIORITY);
 	}
 	
@@ -290,21 +372,43 @@ public class Client {
 	 * @param andRemove Whether to delete the message after retrieving it.
 	 * @param orderedBy A value indicating how to determine which message to return. 
 	 * @return The message that was selected 
+	 * @throws IOException If an error occurred on the channel
+	 * @throws QueueInexistentException If the filter specified was a queue and it does not exist
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 */
-	public Message ViewMessageFromQueue(String queueName, boolean andRemove, Order orderedBy) {
+	public Message ViewMessageFromQueue(String queueName, boolean andRemove, Order orderedBy) 
+			throws InvalidHeaderException, IOException, QueueInexistentException, UnspecifiedErrorException {
+		final GetMessageLogRecord record = new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, andRemove);
+		LOGGER.log(record);
+		
 		try {
-			return this.retrieveMessage(queueName, Filter.QUEUE, orderedBy, andRemove);
-		} catch (RequestResponseException e) {
-			// TODO Log the message appropriately
-			// e.printStackTrace();
-			return null;
+			Message result = server.RetrieveMessage(queueName, Filter.QUEUE, orderedBy, andRemove);
+			
+			LOGGER.log(new GetMessageLogRecord(this, result, Filter.QUEUE, queueName, 
+					orderedBy, andRemove, record.getMillis()));
+			return result;
+		} catch (QueueInexistentException e) {
+			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (ClientInexistentException e) {
+			// Should never reach here
+			e.printStackTrace();
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (IOException e) {
-			// TODO Log the message appropriately
-			e.printStackTrace();
+			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			// TODO Log the message appropriately
-			e.printStackTrace();
+			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		}
+		
 		return null;
 	}
 	
@@ -312,9 +416,14 @@ public class Client {
 	 * Retrieves a message to be viewed from a particular sender.
 	 * @param senderName The name of the sender
 	 * @param andRemove Whether to delete the message after retrieving it.
-	 * @return The message with the highest priority from the sender.
+	 * @return The message with the highest priority from the sender or null if there is no message
+	 * @throws IOException If an error occurred on the channel
+	 * @throws ClientInexistentException If the filter specified was a sender and it does not exist
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 */
-	public Message ViewMessageFromSender(String senderName, boolean andRemove) {
+	public Message ViewMessageFromSender(String senderName, boolean andRemove) 
+			throws ClientInexistentException, UnspecifiedErrorException, IOException, InvalidHeaderException {
 		return ViewMessageFromSender(senderName, andRemove, Order.PRIORITY);
 	}
 	
@@ -323,88 +432,53 @@ public class Client {
 	 * @param senderName The name of the sender
 	 * @param andRemove Whether to delete the message after retrieving it.
 	 * @param orderedBy A value indicating how to determine which message to return.
-	 * @return The message that was selected.
+	 * @return The message that was selected or null if no message was retrieved
+	 * @throws IOException If an error occurred on the channel
+	 * @throws ClientInexistentException If the filter specified was a sender and it does not exist
+	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
+	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 */
-	public Message ViewMessageFromSender(String senderName, boolean andRemove, Order orderedBy) {
+	public Message ViewMessageFromSender(String senderName, boolean andRemove, Order orderedBy) 
+			throws ClientInexistentException, UnspecifiedErrorException, IOException, InvalidHeaderException {
+				
+		final GetMessageLogRecord record = new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, andRemove);
+		LOGGER.log(record);
+		
 		try {
-			return this.retrieveMessage(senderName, Filter.SENDER, orderedBy, andRemove);
-		} catch (RequestResponseException e) {
-			// TODO Log the message appropriately
+			Message result = server.RetrieveMessage(senderName, Filter.SENDER, orderedBy, andRemove);
+
+			LOGGER.log(new GetMessageLogRecord(this, result, Filter.SENDER, senderName, 
+					orderedBy, andRemove, record.getMillis()));
+			return result;
+		} catch (QueueInexistentException e) {
+			// Should never reach here
 			e.printStackTrace();
+		} catch (ClientInexistentException e) {
+			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
+		} catch (UnspecifiedErrorException e) {
+			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (IOException e) {
-			// TODO Log the message appropriately
-			e.printStackTrace();
+			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			// TODO Log the message appropriately
-			e.printStackTrace();
+			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+					andRemove, e, record.getMillis()));
+			if (!suppressingErrors) throw e;
 		}
+
 		return null;
 	}
 	
 	/**
-	 * Handles retrieval of messages from the server
-	 * @param name The value to filter by
-	 * @param filter The type of filter to apply, sender or queue
-	 * @param order The order in which to return the details
-	 * @param delete Whether to delete the message or not
-	 * @return A message object containing the details of the message
-	 * @throws RequestResponseException If the request was not carried out successfully
-	 * as deemed by the server
-	 * @throws IOException If an IOException occurred while using the channel
-	 * @throws InvalidHeaderException If the data was corrupted in transit and was thus
-	 * rendered indecipherable.
+	 * Gets the server that the client is interacting with
+	 * @return The server that the client is interacting with
 	 */
-	private Message retrieveMessage(String value, Filter filter, Order order, boolean delete) throws RequestResponseException, 
-																										IOException, InvalidHeaderException {
-		this.sendMessage(new RetrieveMessageRequest(value, filter, order, delete));
-
-		ProtocolMessage message = this.getResponse();
-
-		if (message.getMessageType() == MessageType.REQUEST_RESPONSE) {
-			RequestResponse rqMessage = (RequestResponse) message;
-			throw new RequestResponseException(rqMessage.getDescription(), rqMessage.getStatus());				
-		} else {
-			RetrieveMessageResponse response = (RetrieveMessageResponse) message;
-
-			return new Message(response.getMessageId(), response.getContext(), (byte)response.getPriority(),
-					response.getMessageContent(), response.getSender(), response.getQueue(), response.getReceiver());
-		}
+	public ServerRPC getServer() {
+		return server;
 	}
-		
-	/**
-	 * Sends a message over this client's socket-channel to the remote
-	 * server.
-	 * @param message The ProtocolMessage to be sent.
-	 * @throws IOException If an IOException occurs while writing to the
-	 * socket.
-	 */
-	private void sendMessage(ProtocolMessage message) throws IOException {
-	    ByteBuffer buffer = ProtocolMessage.toBytes(message);
-	    while(buffer.hasRemaining())
-	        channelToServer.write(buffer);
-	}
-	
-	
-	/**
-	 * Reads a response from the server over the socket channel used by this client
-	 * and converts it to a ProtocolMessage.
-	 * @return A protocol message representing the response from the server.
-	 * @throws IOException If an IOException occurs while reading from the channel.
-	 * @throws InvalidHeaderException If the header read had an invalid format
-	 */
-	private ProtocolMessage getResponse() throws IOException, InvalidHeaderException {
-		// Attempt read the header information from the channel
-		ByteBuffer buffer = ByteBuffer.allocate(ProtocolMessage.HEADER_SIZE);
-		while(buffer.hasRemaining())
-		    channelToServer.read(buffer);
-		buffer.flip();
-
-		// Read the body and convert it into a message
-		int bodySize = ProtocolMessage.getBodySize(buffer);
-		buffer = ByteBuffer.allocate(bodySize);
-		while(buffer.hasRemaining())
-		    channelToServer.read(buffer);
-		buffer.flip();
-		return ProtocolMessage.fromBytes(buffer);
-	}	
 }

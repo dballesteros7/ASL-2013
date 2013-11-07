@@ -5,13 +5,20 @@
  */
 package org.ftab.client;
 
+import java.util.ArrayList;
+
 import org.ftab.communication.requests.SendMessageRequest.Context;
 
 /**
- * Encapsulates a message pulled from a single queue
+ * Encapsulates a message
  */
 public class Message {
-
+	/**
+	 * Constant representing the ID for a message with no ID.
+	 */
+	private static final int NO_ID = -1;
+	
+	
     /**
      * Id of the message in the database.
      */
@@ -31,7 +38,7 @@ public class Message {
     /**
      * Name of the queue from which this message was retrieved.
      */
-    private final String queueName;
+    private final ArrayList<String> queues = new ArrayList<String>();
 
     /**
      * Context of the message (i.e. None, request, response).
@@ -41,7 +48,7 @@ public class Message {
     /**
      * Priority of the message.
      */
-    private final short priority;
+    private final byte priority;
 
     /**
      * Body of the message.
@@ -63,26 +70,55 @@ public class Message {
      *            content of the message.
      * @param nSender
      *            client that sent the message.
-     * @param nQueueName
-     *            name of the queue where the message resides.
      * @param nReceiver
      *            client that is supposed to receive the message.
+     * @param nQueues
+     *            the name of the queue or queues on which the message resided or is to be sent to
      */
-    public Message(long nId, Context nContext, short nPrio, String nContent,
-            String nSender, String nQueueName, String nReceiver) {
+    public Message(long nId, Context nContext, byte nPrio, String nContent,
+            String nSender, String nReceiver, String... nQueues) {
         id = nId;
         content = nContent;
         context = nContext;
         priority = nPrio;
         sender = nSender;
-        queueName = nQueueName;
+        for (String q : nQueues) this.queues.add(q);
         receiver = nReceiver;
     }
 
     /**
+     * Creates a message object with the given information, all parameters
+     * except receiver are expected to be not-null and reference valid
+     * information in the database.
+     * 
+     * @param nContext
+     *            context of the message.
+     * @param nPrio
+     *            priority of the message.
+     * @param nContent
+     *            content of the message.
+     * @param nSender
+     *            client that sent the message.
+     * @param nReceiver
+     *            client that is supposed to receive the message.
+     * @param nQueues
+     *            the name of the queue or queues on which the message resided or is to be sent to
+     */
+    public Message(Context nContext, byte nPrio, String nContent,
+            String nSender, String nReceiver, String... nQueues) {
+    	id = Message.NO_ID;
+        content = nContent;
+        context = nContext;
+        priority = nPrio;
+        sender = nSender;
+        for (String q : nQueues) this.queues.add(q);
+        receiver = nReceiver;
+    }
+    
+    /**
      * Getter for the id field.
      * 
-     * @return message's id.
+     * @return message's id or -1 if it was not set
      */
     public long getId() {
         return id;
@@ -102,7 +138,7 @@ public class Message {
      * 
      * @return message's priority.
      */
-    public short getPriority() {
+    public byte getPriority() {
         return priority;
     }
 
@@ -125,13 +161,13 @@ public class Message {
     }
 
     /**
-     * Getter for the queue name.
-     * 
-     * @return message's queue name.
+     * Gets the queues the message either is to be sent to or
+     * was retrieved from.
+     * @return The list of queue names.
      */
-    public String getQueueName() {
-        return queueName;
-    }
+    public Iterable<String> getQueues() {
+		return queues;
+	}
 
     /**
      * Getter for the receiver field.
@@ -142,4 +178,36 @@ public class Message {
         return receiver;
     }
 
+    @Override
+    public String toString() {
+    	StringBuilder stringRep = new StringBuilder();
+    	
+    	if (this.getId() != Message.NO_ID) {
+    		stringRep.append(String.format("ID: %d \t", this.getId()));
+    	}
+    	
+    	if (this.getReceiver() != null) {
+    		stringRep.append(String.format("Sender: %s \t Receiver: %s \n", this.getSender(), this.getReceiver()));
+    	} else {
+    		stringRep.append(String.format("Sender: %s \n", this.getSender()));
+    	}
+    	
+    	stringRep.append(String.format("Priority: %d \t Context: %s \n", this.getPriority(), this.getContext().name()));
+    	
+    	stringRep.append(String.format("Queues: %s \n", this.queues.toString()));
+    	
+    	stringRep.append(String.format("\n%s", this.getContent()));
+    			
+    	return stringRep.toString();
+    }
+    
+    /**
+     * Gets a summary of the details of the message
+     * @return A string summarizing the contents of this messages
+     */
+    public String getSummary() {
+    	return String.format("Message from %s to %s on %d queues with priority %d, context %s and %d characters.",
+    			this.getSender(), (this.getReceiver() == null) ? "no one" : this.getReceiver(), this.queues.size(),
+    					this.getPriority(), this.getContext().name(), this.getContent().length());
+    }
 }

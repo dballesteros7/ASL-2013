@@ -20,8 +20,6 @@ import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
-import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
-import org.ftab.communication.requests.RetrieveMessageRequest.Order;
 import org.ftab.communication.requests.SendMessageRequest;
 import org.ftab.communication.responses.GetQueuesResponse;
 import org.ftab.communication.responses.RequestResponse;
@@ -43,6 +41,8 @@ import org.ftab.database.message.RetrieveMessage;
 import org.ftab.database.queue.CreateQueue;
 import org.ftab.database.queue.DeleteQueue;
 import org.ftab.database.queue.GetQueuesWithMessages;
+import org.ftab.pubenums.Filter;
+import org.ftab.pubenums.Order;
 import org.ftab.server.exceptions.RemoteSocketClosedException;
 
 /**

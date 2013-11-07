@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ServerManager>
+    <WorkerThreads>10</WorkerThreads>
+    <ClientsPerWorker>2</ClientsPerWorker>
+    <LoggingLevel>DEBUG</LoggingLevel>
+    <LogOutput>C:\logs\serverlog%g.log</LogOutput>
+    <ListeningPort>34582</ListeningPort>
+    <DatabaseUser>user25</DatabaseUser>
+    <DatabasePassword>dbaccess25</DatabasePassword>
+    <DatabaseServer>localhost:5432</DatabaseServer>
+    <DatabaseName>MockDB</DatabaseName>
+    <DatabaseConnections>50</DatabaseConnections>
+</ServerManager>

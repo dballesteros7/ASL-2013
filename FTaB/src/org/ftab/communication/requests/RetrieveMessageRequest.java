@@ -9,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import org.ftab.communication.ProtocolMessage;
+import org.ftab.pubenums.Filter;
+import org.ftab.pubenums.Order;
 
 /**
  * Class that encapsulates a request from the client to the server
@@ -21,106 +23,6 @@ import org.ftab.communication.ProtocolMessage;
  *
  */
 public class RetrieveMessageRequest extends ProtocolMessage {
-    
-	/**
-	 * Enum type to signify whther the request corresponds to
-	 * filtering by a particular queue or a particular sender. 
-	 * @author Jean-Pierre Smith
-	 */
-	public enum Filter {
-        QUEUE(BY_QUEUE), SENDER(BY_SENDER);
-        
-        /**
-         * The associated byte value for an enum constant
-         */
-        private byte byteValue;
-        
-        /**
-         * Creates the enum type with a specified mapping to a byte value.
-         * @param mapping The byte value corresponding to the enum
-         */
-        Filter(byte mapping) {
-        	byteValue = mapping;
-        }
-        
-        /**
-         * Converts the enumeration constant to a byte value.
-         * @return The byte value associated with the enumeration.
-         */
-        public byte getByteValue() {
-        	return byteValue;
-        }
-        
-        /**
-         * Converts a byte value to an enumeration constant
-         * @param b The byte value to convert
-         * @return The enumerated constant corresponding to the supplied byte value.
-         */
-        public static Filter fromByte(byte b) {
-        	for(Filter filter : Filter.values()) {
-        		if(b == filter.getByteValue()) {
-        			return filter;
-        		}
-        	}
-        	throw new IllegalArgumentException("That byte value has no defined Filter.");
-        }        
-    };
-    
-    /**
-     * The byte values corresponding to the enums for the Filter type 
-     */
-    private final static byte BY_QUEUE = 0, BY_SENDER = 1;
-    
-    /**
-     * Enum type to signify whether to return the message by highest
-     * priority or earliest time.
-     * @author Jean-Pierre Smith
-     *
-     */
-    public enum Order {
-        PRIORITY(BY_PRIO), TIMESTAMP(BY_TIME);
-        
-        /**
-         * The associated byte value for an enum constant
-         */
-        private byte byteValue;
-        
-        /**
-         * Creates the enum type with a specified mapping to a byte value.
-         * @param mapping The byte value corresponding to the enum
-         */
-        Order(byte mapping) {
-        	byteValue = mapping;
-        }
-        
-        /**
-         * Converts the enumeration constant to a byte value.
-         * @return The byte value associated with the enumeration.
-         */
-        public byte getByteValue() {
-        	return byteValue;
-        }
-        
-        /**
-         * Converts a byte value to an enumeration constant
-         * @param b The byte value to convert
-         * @return The enumerated constant corresponding to the supplied byte value.
-         */
-        public static Order fromByte(byte b) {
-        	for(Order order : Order.values()) {
-        		if(b == order.getByteValue()) {
-        			return order;
-        		}
-        	}
-        	throw new IllegalArgumentException("That byte value has no defined Order.");
-        }    
-    };
-    
-    /**
-     * The byte values corresponding to the Order enumerated values.
-     */
-    private final static byte BY_PRIO = 0, BY_TIME = 1;
-    
     /**
      * The criteria by which to search for a message
      */

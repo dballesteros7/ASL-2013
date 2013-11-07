@@ -3,6 +3,7 @@ package org.ftab.test.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -79,7 +80,11 @@ public class ClientConnectionTest {
 			@Override
 			public void run() {
 				final Client client = new Client("bob");
-				assertTrue(client.Connect("localhost", portNumber));
+				try {
+					assertTrue(client.Connect("localhost", portNumber));
+				} catch (Exception e) {
+					fail("Exception was thrown.");
+				}
 			}
 		}, Boolean.TRUE);
 		
@@ -95,7 +100,7 @@ public class ClientConnectionTest {
 	}
 
 	/**
-	 * Tests that the client will recognise reponses that are not successful completions
+	 * Tests that the client will recognise responses that are not successful completions
 	 * @throws IOException
 	 * @throws InvalidHeaderException
 	 * @throws InterruptedException
@@ -107,13 +112,15 @@ public class ClientConnectionTest {
 			@Override
 			public void run() {
 				final Client client = new Client("bob");
-				assertFalse(client.Connect("localhost", portNumber));
+				try {
+					assertFalse(client.Connect("localhost", portNumber));
+				} catch (Exception e) { } 
 			}
 		}, Boolean.FALSE);
 		
 		SocketChannel channel = serverChannel.accept();
 		
-		// Get the cnnection request
+		// Get the connection request
 		ConnectionRequest conRequest = (ConnectionRequest) this.getMessage(channel);
 		assertEquals(conRequest.isConnection(), true);
 		assertEquals(conRequest.getUsername(), "bob");

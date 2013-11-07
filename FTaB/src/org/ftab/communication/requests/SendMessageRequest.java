@@ -29,7 +29,7 @@ public class SendMessageRequest extends ProtocolMessage {
      *
      */
 	public enum Context {
-        REQUEST(REQ_CONTEXT), RESPONSE(RESP_CONTEXT), NONE(NO_CONTEXT);
+        REQUEST(REQ_CONTEXT, "Request"), RESPONSE(RESP_CONTEXT, "Response"), NONE(NO_CONTEXT, "Neither");
         
         /**
          * The associated byte value for an enum constant
@@ -37,11 +37,17 @@ public class SendMessageRequest extends ProtocolMessage {
         private byte byteValue;
         
         /**
+         * The string representation of the enumerated value.
+         */
+        private String stringRep;
+        
+        /**
          * Creates the enum type with a specified mapping to a byte value.
          * @param mapping The byte value corresponding to the enum
          */
-        Context(byte mapping) {
+        Context(byte mapping, String stringRep) {
         	byteValue = mapping;
+        	this.stringRep = stringRep;
         }
         
         /**
@@ -64,6 +70,11 @@ public class SendMessageRequest extends ProtocolMessage {
         		}
         	}
         	throw new IllegalArgumentException("That byte value has no defined Context.");
+        }
+        
+        @Override
+        public String toString() {
+        	return stringRep;
         }
     };
     
