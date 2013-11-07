@@ -9,3 +9,6 @@
 *.metadata
 *.project
 *.settings
+
+# Javadoc
+FTaB/doc/
