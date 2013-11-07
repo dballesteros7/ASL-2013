@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ServerManager>
-    <WorkerThreads>25</WorkerThreads>
-    <ClientsPerWorker>2</ClientsPerWorker>
-    <LoggingLevel>DEBUG</LoggingLevel>
+    <WorkerThreads>24</WorkerThreads>
+    <ClientsPerWorker>5</ClientsPerWorker>
+    <LoggingLevel>INFO</LoggingLevel>
     <LogOutput>/home/user25/logs/serverlog%g.log</LogOutput>
     <ListeningPort>34582</ListeningPort>
     <DatabaseUser>user25</DatabaseUser>
     <DatabasePassword>dbaccess25</DatabasePassword>
-    <DatabaseServer>dryad13.ethz.ch:5454</DatabaseServer>
+    <DatabaseServer>dryad09.ethz.ch:5454</DatabaseServer>
     <DatabaseName>main</DatabaseName>
     <DatabaseConnections>25</DatabaseConnections>
 </ServerManager>
