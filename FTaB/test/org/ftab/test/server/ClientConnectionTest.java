@@ -5,7 +5,10 @@
  */
 package org.ftab.test.server;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -22,7 +25,6 @@ import org.ftab.communication.ProtocolMessage.MessageType;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.GetQueuesRequest;
-import org.ftab.communication.requests.MessageReceivedRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
@@ -231,16 +233,16 @@ public class ClientConnectionTest {
         // Mario now peeks for the top priority message and the newest one in
         // each queue.
         clientSocket.write(ProtocolMessage.toBytes(new RetrieveMessageRequest(
-                "HighPrio", Filter.QUEUE, Order.PRIORITY)));
+                "HighPrio", Filter.QUEUE, Order.PRIORITY, true)));
         while (!m.processRead(listeningSocket));
         clientSocket.write(ProtocolMessage.toBytes(new RetrieveMessageRequest(
-                "Spam", Filter.QUEUE, Order.TIMESTAMP)));
+                "Spam", Filter.QUEUE, Order.TIMESTAMP, true)));
         while (!m.processRead(listeningSocket));
         clientSocket.write(ProtocolMessage.toBytes(new RetrieveMessageRequest(
-                "Mario", Filter.SENDER, Order.PRIORITY)));
+                "Mario", Filter.SENDER, Order.PRIORITY, false)));
         while (!m.processRead(listeningSocket));
         clientSocket.write(ProtocolMessage.toBytes(new RetrieveMessageRequest(
-                "Alice", Filter.SENDER, Order.TIMESTAMP)));
+                "Alice", Filter.SENDER, Order.TIMESTAMP, false)));
         while (!m.processRead(listeningSocket));
 
         // Now let's clear the write buffer in the processor.
@@ -310,13 +312,6 @@ public class ClientConnectionTest {
             }
         }
 
-        // Pop the first two messages and then disconnect
-        clientSocket.write(ProtocolMessage.toBytes(new MessageReceivedRequest(
-                messagesToDelete[0], fromQueues[0], true)));
-        clientSocket.write(ProtocolMessage.toBytes(new MessageReceivedRequest(
-                messagesToDelete[1], fromQueues[1], true)));
-        clientSocket.write(ProtocolMessage.toBytes(new MessageReceivedRequest(
-                messagesToDelete[2], fromQueues[2], false)));
         clientSocket.write(ProtocolMessage.toBytes(new ConnectionRequest("",
                 false)));
         while (!m.processRead(listeningSocket));

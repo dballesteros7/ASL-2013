@@ -34,14 +34,15 @@ public class Client {
 	/**
 	 * The sting that represents the user's login information
 	 */
-	private final String username;
+	//TODO: Make a getter and return to private
+	public final String username;
 	
 	/**
 	 * Creates a new instance of a client with the specified name
 	 * @param clientName 
 	 */
 	public Client(String clientName) {
-		this.username = clientName.toLowerCase();
+		this.username = clientName;
 		
 		// TODO: Log the successful creation
 	}

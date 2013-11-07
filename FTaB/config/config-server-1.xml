@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ServerManager>
+    <WorkerThreads>50</WorkerThreads>
+    <ClientsPerWorker>10</ClientsPerWorker>
+    <LoggingLevel>DEBUG</LoggingLevel>
+    <LogOutput>/tmp/serverlog%g.log</LogOutput>
+    <ListeningPort>34582</ListeningPort>
+    <DatabaseUser>user25</DatabaseUser>
+    <DatabasePassword>dbaccess25</DatabasePassword>
+    <DatabaseServer>dryad05.ethz.ch:5454</DatabaseServer>
+    <DatabaseName>main</DatabaseName>
+    <DatabaseConnections>50</DatabaseConnections>
+</ServerManager>

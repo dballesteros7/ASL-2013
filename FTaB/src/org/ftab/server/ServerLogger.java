@@ -7,30 +7,57 @@ package org.ftab.server;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import org.ftab.server.exceptions.ConfigurationErrorException;
 
 /**
- * 
+ * Logger for the server, it implements its own simple formatter that cuts down
+ * the clutter of the default java formatter.
  */
-public class ServerLogger {
+public class ServerLogger extends Formatter {
 
+    /**
+     * Custom log levels for the application, these are the possible values for
+     * the XML configuration file.
+     */
     private static enum LOGGING_LEVELS {
         DEBUG, INFO, WARNING
     };
 
-    static private FileHandler log;
-    static private SimpleFormatter logFormatter;
-
+    /**
+     * This utility method allows the server to easily format IP address from a
+     * SocketChannel object.
+     * 
+     * @param sc
+     *            socket channel to parse.
+     * @return ip address and port associated to the socket channel.
+     */
     public static String parseSocketAddress(SocketChannel sc) {
-        return "[" + sc.socket().getInetAddress().getHostName() + ":"
-                + sc.socket().getPort() + "]";
+        return "[" + sc.socket().getInetAddress().getHostName() + ":" +
+                sc.socket().getPort() + "]";
     }
 
+    /**
+     * Setup the root logger to use this formatter and log to the file in the
+     * desired path.
+     * 
+     * @param logLevel
+     *            minimum level of logging.
+     * @param logOutput
+     *            path to the file where the log should be stored.
+     * @throws IOException
+     *             If there is a problem opening the log file.
+     * @throws ConfigurationErrorException
+     *             if the logging level is not correct.
+     */
     static public void setup(String logLevel, String logOutput)
             throws IOException, ConfigurationErrorException {
 
@@ -55,12 +82,64 @@ public class ServerLogger {
 
         // Create a fileHandler pointing to the given file, the path is expected
         // to be a pattern for log rotation.
-        log = new FileHandler(logOutput, 1024 * 1024 * 1024, 10);
+        FileHandler log = new FileHandler(logOutput, 1024 * 1024 * 1024, 10);
 
         // Create a simple formatter and add the handler to the global logger
-        logFormatter = new SimpleFormatter();
+        ServerLogger logFormatter = new ServerLogger();
         log.setFormatter(logFormatter);
+        for (Handler handler : logger.getHandlers()) {
+            logger.removeHandler(handler);
+        }
         logger.addHandler(log);
+    }
+
+    /**
+     * Close the handlers in the global logger.
+     */
+    public static void closeLogger() {
+        // Get the global logger to close it
+        Logger logger = Logger.getLogger("");
+        for (Handler handler : logger.getHandlers()) {
+            handler.close();
+            logger.removeHandler(handler);
+        }
+    }
+
+    @Override
+    public String format(LogRecord record) {
+        StringBuilder sb = new StringBuilder(1000);
+        Level recordLevel = record.getLevel();
+        sb.append(calcDate(record.getMillis()));
+        sb.append(" ");
+        sb.append(String.format("%-32s", record.getLoggerName()));
+        sb.append(" ");
+        if (recordLevel.intValue() >= Level.WARNING.intValue())
+            sb.append("ERROR: ");
+        else if (recordLevel.intValue() >= Level.INFO.intValue())
+            sb.append("INFO: ");
+        else
+            sb.append("DEBUG: ");
+        if (record.getThrown() != null) {
+            sb.append(record.getThrown().getMessage());
+        } else {
+            sb.append(record.getMessage());
+        }
+        sb.append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * Utility method to parse miliseconds since epoch to a readable date.
+     * 
+     * @param millisecs
+     *            miliseconds since epoch.
+     * @return readable string for the data represented by milisecs.
+     */
+    private String calcDate(long millisecs) {
+        SimpleDateFormat date_format = new SimpleDateFormat(
+                "MM-dd-yyyy HH:mm:SSS");
+        Date resultdate = new Date(millisecs);
+        return date_format.format(resultdate);
     }
 
 }

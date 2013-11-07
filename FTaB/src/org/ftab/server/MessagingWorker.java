@@ -26,7 +26,7 @@ public class MessagingWorker implements Runnable {
     /**
      * The class' logger
      */
-    private final static Logger LOGGER = Logger.getLogger(ServerManager.class
+    private final static Logger LOGGER = Logger.getLogger(MessagingWorker.class
             .getName());
 
     /**

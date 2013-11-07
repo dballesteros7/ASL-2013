@@ -11,11 +11,17 @@ import java.sql.SQLException;
 import org.postgresql.ds.PGPoolingDataSource;
 
 /**
- * 
+ * Wrapper class around PostgreSQL connection pool object.
  */
 public class DBConnectionDispatcher {
+    /**
+     * The PostgreSQL connection pool source.
+     */
     private final PGPoolingDataSource dbConnectionPool;
 
+    /**
+     * Create a new dispatcher with a default connection pool.
+     */
     public DBConnectionDispatcher() {
         dbConnectionPool = new PGPoolingDataSource();
     }

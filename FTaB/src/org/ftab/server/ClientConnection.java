@@ -18,7 +18,6 @@ import java.util.logging.Logger;
 import org.ftab.communication.ProtocolMessage;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.ConnectionRequest;
-import org.ftab.communication.requests.MessageReceivedRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
@@ -54,7 +53,7 @@ public class ClientConnection {
     /**
      * The class' logger
      */
-    private final static Logger LOGGER = Logger.getLogger(ServerManager.class
+    private final static Logger LOGGER = Logger.getLogger(ClientConnection.class
             .getName());
 
     /**
@@ -308,17 +307,6 @@ public class ClientConnection {
                 RetrieveMessageRequest retrieveMessageRequest = (RetrieveMessageRequest) request;
                 nextResponseBuffer = retrieveMessage(retrieveMessageRequest,
                         address);
-                break;
-            case MESSAGE_RECEIVED:
-                MessageReceivedRequest receivedRequest = (MessageReceivedRequest) request;
-                if (receivedRequest.isPop()) {
-                    popMessage(receivedRequest.getMessageId(),
-                            receivedRequest.getQueue(), address);
-                } else {
-                    LOGGER.info("Received confirmation from " + address +
-                            " that message " + receivedRequest.getMessageId() +
-                            " was read but it was a peek operation.");
-                }
                 break;
             case RETRIEVE_QUEUES:
                 nextResponseBuffer = getQueues(address);
@@ -714,11 +702,12 @@ public class ClientConnection {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
             boolean byQueue = retrieveMessageRequest.getFilterType() == Filter.QUEUE;
             boolean byPrio = retrieveMessageRequest.getOrderBy() == Order.PRIORITY;
+            boolean isPop = retrieveMessageRequest.isPopMessage();
             Message msg = RetrieveMessage.execute(client.getClientId(),
                     retrieveMessageRequest.getFilterValue(), byPrio, byQueue,
                     conn);
-            conn.commit();
             if (msg == null) {
+                conn.commit();
                 LOGGER.info("Responded with failure to a retrieve message request from " +
                         address + " because no message was found.");
                 RequestResponse errorResponse = new RequestResponse(
@@ -730,6 +719,14 @@ public class ClientConnection {
                         " ordered by " +
                         retrieveMessageRequest.getOrderBy().toString() +
                         " for " + address + ".");
+                if (isPop) {
+                    DeleteMessage.execute(msg.getId(), msg.getQueueName(), conn);
+                    conn.commit();
+                    LOGGER.info("Popped message " + msg.getId() + " from queue " + msg.getQueueName() +
+                            " for " + address + ".");
+                } else {
+                    conn.commit();
+                }
                 RetrieveMessageResponse messageResponse = new RetrieveMessageResponse(
                         msg);
                 return ProtocolMessage.toBytes(messageResponse);
@@ -747,42 +744,6 @@ public class ClientConnection {
                     logRollbackException(e1);
                 }
             return ProtocolMessage.toBytes(errorResponse);
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    logCloseException(e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Process a request to pop a read message from a queue.
-     * 
-     * @param messageId
-     *            id of the message to pop.
-     * @param queue
-     *            queue where to pop the message.
-     */
-    private void popMessage(long messageId, String queue, String address) {
-        LOGGER.info("Received request to pop message " + messageId +
-                " from queue " + queue + " for " + address + ".");
-        Connection conn = null;
-        try {
-            conn = dbConnectionDispatcher.retrieveDatabaseConnection();
-            DeleteMessage.execute(messageId, queue, conn);
-            conn.commit();
-            LOGGER.info("Popped message " + messageId + " from queue " + queue +
-                    " for " + address + ".");
-        } catch (SQLException e) {
-            if (conn != null)
-                try {
-                    conn.rollback();
-                } catch (SQLException e1) {
-                    logRollbackException(e1);
-                }
         } finally {
             if (conn != null) {
                 try {

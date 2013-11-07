@@ -33,7 +33,7 @@ import org.ftab.communication.responses.RequestResponse.Status;
  * based on configurable limits on the number of worker threads and clients per
  * thread. A ServerManager is created using the ServerFactory.
  */
-public class ServerManager {
+public class ServerManager implements Runnable {
     /**
      * The class' logger
      */
@@ -143,7 +143,7 @@ public class ServerManager {
      *             when there is an error closing the selector or server
      *             channel.
      */
-    private void start() throws IOException {
+    public void run() {
         LOGGER.info("Server starting.");
         Selector serverSelector = null;
         ServerSocketChannel ssc = null;
@@ -173,8 +173,8 @@ public class ServerManager {
                         // we can assume which one it is.
                         SocketChannel sc = ssc.accept();
                         sc.configureBlocking(false);
-                        LOGGER.info("Received incoming connection "
-                                + ServerLogger.parseSocketAddress(sc) + ".");
+                        LOGGER.info("Received incoming connection " +
+                                ServerLogger.parseSocketAddress(sc) + ".");
                         // Check if the server is full or not, if it is then
                         // register the socket for writing so we can inform the
                         // client that we can't accept the connection. Otherwise
@@ -197,9 +197,9 @@ public class ServerManager {
                         while (responseBuffer.hasRemaining()) {
                             sc.write(responseBuffer);
                         }
-                        LOGGER.info("Refused connection from "
-                                + ServerLogger.parseSocketAddress(sc)
-                                + " because the server is full.");
+                        LOGGER.info("Refused connection from " +
+                                ServerLogger.parseSocketAddress(sc) +
+                                " because the server is full.");
                         key.cancel();
                         sc.close();
                     }
@@ -209,11 +209,50 @@ public class ServerManager {
             LOGGER.severe("There was an IO error while running the server, shutting it down.");
             LOGGER.log(Level.SEVERE, "", e);
         } finally {
-            if (ssc != null)
-                ssc.close();
-            if (serverSelector != null)
-                serverSelector.close();
+            if (ssc != null) {
+                try {
+                    ssc.close();
+                } catch (IOException e) {
+                    LOGGER.severe("IO exception while closing server channel, it is unrecoverable.");
+                    LOGGER.log(Level.SEVERE, "", e);
+                }
+            }
+            if (serverSelector != null) {
+                try {
+                    serverSelector.close();
+                } catch (IOException e) {
+                    LOGGER.severe("IO exception while closing the server selector, it is unrecoverable.");
+                    LOGGER.log(Level.SEVERE, "", e);
+                }
+            }
         }
+    }
+
+    /**
+     * Instruct the server manager to stop the execution. This doesn't take care
+     * of cleaning up the resources, that must be done with the shutdown
+     * directive.
+     */
+    public void stop() {
+        keepRunning = false;
+    }
+
+    /**
+     * Gracefully shutdown the manager, this implies going through all the
+     * worker and stopping them, then closing the database connection pool. It
+     * is assumed that the selector and server socket was closed at the end of
+     * the start method.
+     */
+    public void shutdown() {
+        LOGGER.info("Gracefully shutting down the server.");
+        for (MessagingWorker worker : workers) {
+            worker.stopRunning();
+            while (!worker.isShutdown());
+        }
+        dbConnectionDispatcher.closePool();
+        threadPool.shutdown();
+        LOGGER.info("Ready to leave.");
+        ServerLogger.closeLogger();
     }
 
     /**
@@ -233,9 +272,9 @@ public class ServerManager {
             for (MessagingWorker worker : workers) {
                 if (!worker.isFull()) {
                     worker.registerChannel(sc);
-                    LOGGER.info("Assigned connection from "
-                            + ServerLogger.parseSocketAddress(sc)
-                            + " to worker " + worker.getIdentifier() + ".");
+                    LOGGER.info("Assigned connection from " +
+                            ServerLogger.parseSocketAddress(sc) +
+                            " to worker " + worker.getIdentifier() + ".");
                     return;
                 }
             }
@@ -243,12 +282,12 @@ public class ServerManager {
             // still below max capacity in the server.
             MessagingWorker newWorker = new MessagingWorker(
                     maxClientsPerWorker, dbConnectionDispatcher);
-            LOGGER.info("Created new worker: " + newWorker.getIdentifier()
-                    + ".");
+            LOGGER.info("Created new worker: " + newWorker.getIdentifier() +
+                    ".");
             newWorker.registerChannel(sc);
-            LOGGER.info("Assigned connection from "
-                    + ServerLogger.parseSocketAddress(sc) + " to worker "
-                    + newWorker.getIdentifier() + ".");
+            LOGGER.info("Assigned connection from " +
+                    ServerLogger.parseSocketAddress(sc) + " to worker " +
+                    newWorker.getIdentifier() + ".");
             threadPool.execute(newWorker);
             workers.add(newWorker);
         } catch (IOException e) {
@@ -278,25 +317,8 @@ public class ServerManager {
     }
 
     /**
-     * Gracefully shutdown the manager, this implies going through all the
-     * worker and stopping them, then closing the database connection pool. It
-     * is assumed that the selector and server socket was closed at the end of
-     * the start method.
-     */
-    private void shutdown() {
-        System.out.println("Gracefully shutting down the server.");
-        for (MessagingWorker worker : workers) {
-            worker.stopRunning();
-            while (!worker.isShutdown());
-        }
-        dbConnectionDispatcher.closePool();
-        threadPool.shutdown();
-        System.out.println("Ready to leave.");
-    }
-
-    /**
      * Entry point for the server. Build a server manager using the standard
-     * factory and start it.
+     * factory and start it in a separate thread.
      * 
      * @param args
      *            command line arguments.
@@ -305,17 +327,18 @@ public class ServerManager {
         if (args.length < 1)
             System.exit(1);
         final ServerManager manager = ServerFactory.buildManager(args[0]);
+        final Thread targetThread = new Thread(manager);
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                manager.keepRunning = false;
+                manager.stop();
+                try {
+                    targetThread.join(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 manager.shutdown();
             }
         });
-        try {
-            manager.start();
-        } catch (IOException e) {
-            LOGGER.severe("IO error while running the server.");
-            LOGGER.log(Level.SEVERE, "", e);
-        }
+        targetThread.start();
     }
 }
