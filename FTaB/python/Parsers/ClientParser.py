@@ -5,16 +5,21 @@ Created on Oct 31, 2013
 '''
 
 import sys
-import numpy
+import tarfile
+import tempfile
 import glob
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import legend
+import numpy
 
-def plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 10):
+from matplotlib.pyplot import legend
+import matplotlib.pyplot as plt
+
+
+def plotAverageResponseTime(tarredLogs, clientType = 'Alice', eventKeyword = 'SEND', windowSize = 10):
     fileHandleList = []
-    for path in logList:
-        handle = open(path)
-        fileHandleList.append(handle)
+    for path in tarredLogs.getnames():
+        if clientType in path:
+            handle = tarredLogs.extractfile(path)
+            fileHandleList.append(handle)
     
     globalMin = sys.float_info.max
     for handle in fileHandleList:
@@ -27,12 +32,12 @@ def plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 10):
                 if min_val < globalMin:
                     globalMin = min_val
         handle.seek(0)
-
     currentStart = globalMin
     currentEnd = globalMin + windowSize
     data = {}
     breakCount = 0
     while breakCount < len(fileHandleList):
+        print breakCount
         breakCount = 0
         for handle in fileHandleList:
             secondDone = False
@@ -42,6 +47,11 @@ def plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 10):
                 if not line:
                     breakCount += 1
                     break
+                if line.startswith("DISCONNECT"):
+                    print "DISCONNECT"
+                    #handle.seek(last_pos)
+                    #breakCount += 1
+                    #break
                 if line.startswith(eventKeyword):
                     min_val = float(line.split()[1])
                     max_val = float(line.split()[2])
@@ -78,8 +88,8 @@ def plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 10):
         handle.close()
 
 def main():
-    fileList = glob.glob('/home/diegob/ASL_data/Bob*log')
-    plotAverageResponseTime(fileList, eventKeyword='READ')
+    tarLogs = tarfile.open('/home/dballesteros/Dropbox/asl_data/Experiment_3/trace_31_10_clients.tgz', 'r:gz')
+    plotAverageResponseTime(tarLogs)
 
 if __name__ == '__main__':
     sys.exit(main())

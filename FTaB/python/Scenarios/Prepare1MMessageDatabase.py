@@ -1,15 +1,21 @@
 '''
-Created on Oct 16, 2013
+Created on Oct 31, 2013
 
 @author: Diego Ballesteros (diegob)
 '''
 
-import sys
 import ConfigParser
+from random import randint, choice
+import string
+import sys
+
+from org.ftab.communication.requests.SendMessageRequest import Context
+from org.ftab.database.client import CreateClient
+from org.ftab.database.message import CreateMessage
+from org.ftab.server import DBConnectionDispatcher
+
 
 def main(configFile):
-    from org.ftab.server import DBConnectionDispatcher
-    from org.ftab.database.queue import CreateQueue
     dispatch = DBConnectionDispatcher()
     config = ConfigParser.RawConfigParser()
     config.readfp(open(configFile))
@@ -21,8 +27,12 @@ def main(configFile):
     conn = None
     try:
         conn = dispatch.retrieveDatabaseConnection()
-        for i in xrange(100):
-            CreateQueue.execute("NotOriginallyNamedQueue%d" % i, conn)
+        clientId = CreateClient.execute("MessengerGod", False, conn)
+        msg = ''.join(choice(string.ascii_uppercase + string.digits) for _ in range(2000))
+        for i in xrange(1000000):
+            CreateMessage.execute(clientId, ["NotOriginallyNamedQueue%d" % randint(0, 20)], Context.valueOf("NONE").getByteValue(), randint(1,10), msg  , conn)
+            if(i % 100 == 0):
+                print "Progress %s%%" % (float(i)*100/1000000)
         conn.commit()
         print 'Action completed successfully'
     except Exception:
@@ -38,7 +48,7 @@ def main(configFile):
 
 if __name__ == '__main__':
     if(len(sys.argv) == 2 and sys.argv[1] == 'help'):
-        print 'Usage: jython %s <path-to-FTaB-jar> <path-to-dbconnect.ini>' % sys.argv[0]
+        print 'Usage: jython %s <path-to-dbconnect.ini>' % sys.argv[0]
     if(len(sys.argv) < 2):
         sys.exit(1)
     sys.exit(main(sys.argv[1]))

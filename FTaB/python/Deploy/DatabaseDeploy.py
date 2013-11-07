@@ -7,13 +7,12 @@ Created on Oct 16, 2013
 import sys
 import ConfigParser
 
-def main():
+def main(mode, configFile):
     from org.ftab.server import DBConnectionDispatcher
     from org.ftab.database import Create, Destroy
-    mode = sys.argv[2]
     dispatch = DBConnectionDispatcher()
     config = ConfigParser.RawConfigParser()
-    config.readfp(open(sys.argv[3]))
+    config.readfp(open(configFile))
     dispatch.configureDatabaseConnectionPool(config.get("dbconnection", 'user'),
                                              config.get("dbconnection", 'password'),
                                              config.get("dbconnection", 'server'),
@@ -39,8 +38,7 @@ def main():
 
 if __name__ == '__main__':
     if(len(sys.argv) == 2 and sys.argv[1] == 'help'):
-        print 'Usage: jython %s <path-to-FTaB-jar> <Create/Destroy> <path-to-dbconnect.ini>' % sys.argv[0]
-    if(len(sys.argv) < 4):
+        print 'Usage: jython %s <Create/Destroy> <path-to-dbconnect.ini>' % sys.argv[0]
+    if(len(sys.argv) < 3):
         sys.exit(1)
-    sys.path.append(sys.argv[1])
-    sys.exit(main())
+    sys.exit(main(sys.argv[1], sys.argv[2]))

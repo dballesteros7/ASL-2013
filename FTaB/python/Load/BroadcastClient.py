@@ -35,7 +35,7 @@ class BroadcastClient(threading.Thread):
         self.queues = possibleQueues
         self.name = clientName
         self.clientInstance = Client(self.name)
-        self.logFile = open(os.path.join(logPath, "%s.log" % self.name), 'w')
+        self.logFile = open(os.path.join(logPath, "%s.log" % self.name), 'a')
         self.msgSize = msgSize
         return
 
