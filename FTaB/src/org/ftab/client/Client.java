@@ -296,7 +296,8 @@ public class Client {
 			return this.retrieveMessage(queueName, Filter.QUEUE, orderedBy, andRemove);
 		} catch (RequestResponseException e) {
 			// TODO Log the message appropriately
-			e.printStackTrace();
+			// e.printStackTrace();
+			return null;
 		} catch (IOException e) {
 			// TODO Log the message appropriately
 			e.printStackTrace();
