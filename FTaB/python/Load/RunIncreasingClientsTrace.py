@@ -17,7 +17,6 @@ from Load.ReaderClient import ReaderClient
 
 from Deploy.DatabaseDeploy import main as databaseDeploy
 from Scenarios.InitializedSystemNoMessages import main as deployQueues
-from Scenarios.Prepare1MMessageDatabase import main as stuffDatabase
 
 def main():
     config = ConfigParser.RawConfigParser()
@@ -31,7 +30,7 @@ def main():
     traceTime = int(config.get("trace", "runningTime"))
     stepTime = int(config.get("trace", "stepTime"))
     stepSize = int(config.get("trace", "stepSize"))
-    clientsZero = int(config.get("trace", "initialClients"))
+    clientsZero = int(config.get("trace", "initialClients"))    
     iterations = traceTime/stepTime
     possibleQueues = []
     for i in xrange(availableQueues):
@@ -41,17 +40,11 @@ def main():
         clients = []
         for i in xrange(clientsZero + z*stepSize):
             client = BroadcastClient("Alice%d" % i, 2000, possibleQueues, logPath)
-            if(i % 2 == 0):
-                client.setup(serverA, port)
-            else:
-                client.setup(serverB, port)
+            client.setup(serverA, port)
             clients.append(client)
         for i in xrange(clientsZero + z*stepSize):
             client = ReaderClient("Bob%d" % i, possibleQueues, logPath)
-            if(i % 2 == 0):
-                client.setup(serverA, port)
-            else:
-                client.setup(serverB, port)
+            client.setup(serverB, port)
             clients.append(client)
         for client in clients:
             client.start()
@@ -73,7 +66,6 @@ def main():
         databaseDeploy('Destroy', '/home/user25/config/dbconnect.ini')
         databaseDeploy('Create', '/home/user25/config/dbconnect.ini')
         deployQueues('/home/user25/config/dbconnect.ini')
-        stuffDatabase('/home/user25/config/dbconnect.ini')
     return 0
 
 if __name__ == '__main__':
