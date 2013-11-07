@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -74,6 +73,11 @@ public class ServerManager {
     private final DBConnectionDispatcher dbConnectionDispatcher;
 
     /**
+     * Indicates if the manager should continue executing.
+     */
+    private boolean keepRunning;
+
+    /**
      * Initializes a ServerManager instance, this constructor should not be
      * called directly. Instead the ServerFactory service should be used. The
      * ServerManager object is initialized with the given configuration
@@ -100,6 +104,7 @@ public class ServerManager {
         // 3. Configure other attributes
         listeningPort = nListeningPort;
         workers = new LinkedList<MessagingWorker>();
+        keepRunning = true;
         LOGGER.config(String.format(
                 "Created server with the following settings:\n"
                         + "Number of workers: %d\nClients per worker: %d\n"
@@ -135,73 +140,79 @@ public class ServerManager {
      * that the server is full before closing the connection.
      * 
      * @throws IOException
+     *             when there is an error closing the selector or server
+     *             channel.
      */
     private void start() throws IOException {
         LOGGER.info("Server starting.");
-        Selector serverSelector = Selector.open();
-        ServerSocketChannel ssc = ServerSocketChannel.open();
-        ssc.configureBlocking(false);
+        Selector serverSelector = null;
+        ServerSocketChannel ssc = null;
+        try {
+            serverSelector = Selector.open();
+            ssc = ServerSocketChannel.open();
+            ssc.configureBlocking(false);
 
-        ServerSocket ss = ssc.socket();
-        InetSocketAddress address = new InetSocketAddress(listeningPort);
-        ss.bind(address);
-        ssc.register(serverSelector, SelectionKey.OP_ACCEPT);
-        LOGGER.config(String.format(
-                "Server socket created and registered, listening IP: [%s:%d].",
-                address.getHostName(), address.getPort()));
-        while (true) {
-            LOGGER.config("Polling for selector events.");
-            int num = serverSelector.select(60000);
-            if (num == 0) {
-                LOGGER.config("No selector event occured in the last minute.");
-                continue;
-            }
-            Set<SelectionKey> selectedKeys = serverSelector.selectedKeys();
-            Iterator<SelectionKey> it = selectedKeys.iterator();
-            while (it.hasNext()) {
-                SelectionKey key = it.next();
-                it.remove();
-                if (key.isAcceptable()) {
-                    // This selector only has one channel registered to it, so
-                    // we can assume which one it is.
-                    SocketChannel sc = ssc.accept();
-                    sc.configureBlocking(false);
-                    LOGGER.info("Received incoming connection ["
-                            + sc.socket().getInetAddress().getHostName() + ":"
-                            + sc.socket().getPort() + "].");
-                    // Check if the server is full or not, if it is then
-                    // register the socket for writing so we can inform the
-                    // client that we can't accept the connection. Otherwise
-                    // delegate to the first available thread.
-                    if (serverFull()) {
-                        LOGGER.config("Registering connection "
-                                + "for write, server is full.");
-                        sc.register(serverSelector, SelectionKey.OP_WRITE);
-                    } else {
-                        LOGGER.config("Delegating connection to available worker.");
-                        delegateSocketToWorker(sc);
+            ServerSocket ss = ssc.socket();
+            InetSocketAddress address = new InetSocketAddress(listeningPort);
+            ss.bind(address);
+            ssc.register(serverSelector, SelectionKey.OP_ACCEPT);
+            LOGGER.config(String
+                    .format("Server socket created and registered, listening IP: [%s:%d].",
+                            address.getHostName(), address.getPort()));
+            while (!Thread.interrupted() && keepRunning) {
+                LOGGER.config("Polling for selector events.");
+                serverSelector.select();
+                Set<SelectionKey> selectedKeys = serverSelector.selectedKeys();
+                Iterator<SelectionKey> it = selectedKeys.iterator();
+                while (it.hasNext()) {
+                    SelectionKey key = it.next();
+                    it.remove();
+                    if (key.isAcceptable()) {
+                        // This selector only has one channel registered to it,
+                        // so
+                        // we can assume which one it is.
+                        SocketChannel sc = ssc.accept();
+                        sc.configureBlocking(false);
+                        LOGGER.info("Received incoming connection " +
+                                ServerLogger.parseSocketAddress(sc) + ".");
+                        // Check if the server is full or not, if it is then
+                        // register the socket for writing so we can inform the
+                        // client that we can't accept the connection. Otherwise
+                        // delegate to the first available thread.
+                        if (serverFull()) {
+                            LOGGER.config("Registering connection "
+                                    + "for write, server is full.");
+                            sc.register(serverSelector, SelectionKey.OP_WRITE);
+                        } else {
+                            LOGGER.config("Delegating connection to available worker.");
+                            delegateSocketToWorker(sc);
+                        }
+                    } else if (key.isWritable()) {
+                        SocketChannel sc = (SocketChannel) key.channel();
+                        RequestResponse response = new RequestResponse(
+                                Status.FULL_SERVER);
+                        ByteBuffer responseBuffer = ProtocolMessage
+                                .toBytes(response);
+                        // TODO: Make unblocking
+                        while (responseBuffer.hasRemaining()) {
+                            sc.write(responseBuffer);
+                        }
+                        LOGGER.info("Refused connection from " +
+                                ServerLogger.parseSocketAddress(sc) +
+                                " because the server is full.");
+                        key.cancel();
+                        sc.close();
                     }
-                    // Remove the processed key.
-                    selectedKeys.remove(key);
-                } else if (key.isWritable()) {
-                    SocketChannel sc = (SocketChannel) key.channel();
-                    RequestResponse response = new RequestResponse(
-                            Status.FULL_SERVER);
-                    ByteBuffer responseBuffer = ProtocolMessage
-                            .toBytes(response);
-                    // TODO: Make unblocking
-                    while (responseBuffer.hasRemaining()) {
-                        sc.write(responseBuffer);
-                    }
-                    LOGGER.info("Refused connection from ["
-                            + sc.socket().getInetAddress().getHostName() + ":"
-                            + sc.socket().getPort()
-                            + "] because the server is full.");
-                    key.cancel();
-                    sc.close();
-                    selectedKeys.remove(key);
                 }
             }
+        } catch (IOException e) {
+            LOGGER.severe("There was an IO error while running the server, shutting it down.");
+            LOGGER.log(Level.SEVERE, "", e);
+        } finally {
+            if (ssc != null)
+                ssc.close();
+            if (serverSelector != null)
+                serverSelector.close();
         }
     }
 
@@ -222,10 +233,9 @@ public class ServerManager {
             for (MessagingWorker worker : workers) {
                 if (!worker.isFull()) {
                     worker.registerChannel(sc);
-                    LOGGER.info("Assigned connection from ["
-                            + sc.socket().getInetAddress().getHostName() + ":"
-                            + sc.socket().getPort() + "] to worker "
-                            + worker.getIdentifier() + ".");
+                    LOGGER.info("Assigned connection from " +
+                            ServerLogger.parseSocketAddress(sc) +
+                            " to worker " + worker.getIdentifier() + ".");
                     return;
                 }
             }
@@ -233,24 +243,20 @@ public class ServerManager {
             // still below max capacity in the server.
             MessagingWorker newWorker = new MessagingWorker(
                     maxClientsPerWorker, dbConnectionDispatcher);
-            LOGGER.info("Created new worker: " + newWorker.getIdentifier()
-                    + ".");
+            LOGGER.info("Created new worker: " + newWorker.getIdentifier() +
+                    ".");
             newWorker.registerChannel(sc);
-            LOGGER.info("Assigned connection from ["
-                    + sc.socket().getInetAddress().getHostName() + ":"
-                    + sc.socket().getPort() + "] to worker "
-                    + newWorker.getIdentifier() + ".");
+            LOGGER.info("Assigned connection from " +
+                    ServerLogger.parseSocketAddress(sc) + " to worker " +
+                    newWorker.getIdentifier() + ".");
             threadPool.execute(newWorker);
             workers.add(newWorker);
-        } catch (ClosedChannelException e) {
-            LOGGER.severe("Channel was closed before assigning it.");
-            LOGGER.log(Level.CONFIG, "", e);
         } catch (IOException e) {
             LOGGER.severe("There was an error creating a worker");
-            LOGGER.log(Level.CONFIG, "", e);
+            LOGGER.log(Level.SEVERE, "", e);
         } catch (RejectedExecutionException e) {
             LOGGER.severe("Thread pool could not accept a worker.");
-            LOGGER.log(Level.CONFIG, "", e);
+            LOGGER.log(Level.SEVERE, "", e);
         }
     }
 
@@ -272,6 +278,23 @@ public class ServerManager {
     }
 
     /**
+     * Gracefully shutdown the manager, this implies going through all the
+     * worker and stopping them, then closing the database connection pool. It
+     * is assumed that the selector and server socket was closed at the end of
+     * the start method.
+     */
+    private void shutdown() {
+        System.out.println("Gracefully shutting down the server.");
+        for (MessagingWorker worker : workers) {
+            worker.stopRunning();
+            while (!worker.isShutdown());
+        }
+        dbConnectionDispatcher.closePool();
+        threadPool.shutdown();
+        System.out.println("Ready to leave.");
+    }
+
+    /**
      * Entry point for the server. Build a server manager using the standard
      * factory and start it.
      * 
@@ -280,14 +303,19 @@ public class ServerManager {
      */
     public static void main(String[] args) {
         // TODO: Read the configuration file from args
-        ServerManager manager = ServerFactory
+        final ServerManager manager = ServerFactory
                 .buildManager("manuals/config-example.xml");
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                manager.shutdown();
+                manager.keepRunning = false;
+            }
+        });
         try {
             manager.start();
         } catch (IOException e) {
-            LOGGER.severe("There was an IO error while running the server, shutting it down.");
-            LOGGER.log(Level.CONFIG, "", e);
+            LOGGER.severe("IO error while running the server.");
+            LOGGER.log(Level.SEVERE, "", e);
         }
     }
-
 }

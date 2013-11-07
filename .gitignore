@@ -13,3 +13,9 @@
 # Javadoc
 FTaB/doc/
 /bin
+
+# Vim
+*~
+
+# Zips
+*.zip

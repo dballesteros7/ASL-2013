@@ -2,8 +2,12 @@
 <ServerManager>
     <WorkerThreads>5</WorkerThreads>
     <ClientsPerWorker>2</ClientsPerWorker>
-    <DatabaseConnections>5</DatabaseConnections>
     <LoggingLevel>DEBUG</LoggingLevel>
     <LogOutput>C:\Users\Diego\Documents\Logs\serverlog%g.log</LogOutput>
-    <ListeningPort>8432</ListeningPort>        
+    <ListeningPort>34582</ListeningPort>
+    <DatabaseUser>unittester</DatabaseUser>
+    <DatabasePassword>likeineedone</DatabasePassword>
+    <DatabaseServer>localhost</DatabaseServer>
+    <DatabaseName>unitestdiego</DatabaseName>
+    <DatabaseConnections>5</DatabaseConnections>
 </ServerManager>

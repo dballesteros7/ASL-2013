@@ -23,10 +23,6 @@ import org.xml.sax.SAXException;
  */
 public class ServerFactory {
 
-    private final static String[] PROPERTIES = { "WorkerThreads",
-            "ClientsPerWorker", "DatabaseConnections", "LoggingLevel",
-            "LogOutput", "ListeningPort" };
-
     public static ServerManager buildManager(String configurationFilePath) {
         try {
             File xmlFile = new File(configurationFilePath);
@@ -37,25 +33,39 @@ public class ServerFactory {
 
             // Get the configuration options
             int workerThreads = Integer.parseInt(doc
-                    .getElementsByTagName(PROPERTIES[0]).item(0)
+                    .getElementsByTagName("WorkerThreads").item(0)
                     .getTextContent());
             int clientsPerWorker = Integer.parseInt(doc
-                    .getElementsByTagName(PROPERTIES[1]).item(0)
+                    .getElementsByTagName("ClientsPerWorker").item(0)
                     .getTextContent());
-            int databaseConnections = Integer.parseInt(doc
-                    .getElementsByTagName(PROPERTIES[2]).item(0)
-                    .getTextContent());
-            String loggingLevel = doc.getElementsByTagName(PROPERTIES[3])
+            String loggingLevel = doc.getElementsByTagName("LoggingLevel")
                     .item(0).getTextContent();
-            String logOutputPath = doc.getElementsByTagName(PROPERTIES[4])
+            String logOutputPath = doc.getElementsByTagName("LogOutput")
                     .item(0).getTextContent();
             int listeningPort = Integer.parseInt(doc
-                    .getElementsByTagName(PROPERTIES[5]).item(0)
+                    .getElementsByTagName("ListeningPort").item(0)
                     .getTextContent());
+            String databaseUser = doc.getElementsByTagName("DatabaseUser")
+                    .item(0).getTextContent();
+            String databasePassword = doc
+                    .getElementsByTagName("DatabasePassword").item(0)
+                    .getTextContent();
+            String databaseServer = doc.getElementsByTagName("DatabaseServer")
+                    .item(0).getTextContent();
+            String databaseName = doc.getElementsByTagName("DatabaseName")
+                    .item(0).getTextContent();
+            int databaseConnections = Integer.parseInt(doc
+                    .getElementsByTagName("DatabaseConnections").item(0)
+                    .getTextContent());
+
             ServerLogger.setup(loggingLevel, logOutputPath);
 
-            return new ServerManager(workerThreads, clientsPerWorker,
-                    listeningPort);
+            ServerManager instance = new ServerManager(workerThreads,
+                    clientsPerWorker, listeningPort);
+            instance.configureDatabaseConnectionPool(databaseUser,
+                    databasePassword, databaseServer, databaseName,
+                    databaseConnections);
+            return instance;
         } catch (SAXException saxex) {
             saxex.printStackTrace();
         } catch (ParserConfigurationException pcex) {
