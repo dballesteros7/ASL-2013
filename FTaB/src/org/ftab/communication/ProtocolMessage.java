@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.GetQueuesRequest;
-import org.ftab.communication.requests.MessageReceivedRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
 import org.ftab.communication.requests.SendMessageRequest;
@@ -35,8 +34,8 @@ public abstract class ProtocolMessage {
 	 */
 	public enum MessageType {
         CONNECTION_REQUEST(CON_REQ), QUEUE_MODIFICATION(QUE_MOD), SEND_MESSAGE(SEND_MSG), RETRIEVE_MESSAGE(RETR_MSG), 
-        MESSAGE_RECEIVED(MSG_REC), RETRIEVE_QUEUES(RETR_QUE), REQUEST_RESPONSE(REQ_RESP), RETURNED_MESSAGES(RETU_MSG), 
-        RETURNED_QUEUE(RETU_QUE);
+        RETRIEVE_QUEUES(RETR_QUE), REQUEST_RESPONSE(REQ_RESP), RETURNED_MESSAGES(RETU_MSG), 
+        RETURNED_QUEUE(RETU_QUE); // MESSAGE_RECEIVED(MSG_REC), 
         
         /**
          * The associated byte value for an enum constant
@@ -78,7 +77,7 @@ public abstract class ProtocolMessage {
      * Byte values to be sent across the link corresponding to various message types.
      */
     private static final byte CON_REQ = 0, QUE_MOD = 1, SEND_MSG = 2, RETR_MSG = 3, 
-    		MSG_REC = 4, RETR_QUE = 5, REQ_RESP = 6, RETU_MSG = 7, RETU_QUE = 8;
+    		RETR_QUE = 5, REQ_RESP = 6, RETU_MSG = 7, RETU_QUE = 8; // MSG_REC = 4, 
     
     /**
      * The character set name to be used for all string encodings
@@ -156,9 +155,9 @@ public abstract class ProtocolMessage {
     	case RETRIEVE_QUEUES:
     		bodyBuffer = ((GetQueuesRequest)message).toBytes();
     		break;
-    	case MESSAGE_RECEIVED:
-    		bodyBuffer = ((MessageReceivedRequest)message).toBytes();
-    		break;
+//    	case MESSAGE_RECEIVED:
+//    		bodyBuffer = ((MessageReceivedRequest)message).toBytes();
+//    		break;
 		case QUEUE_MODIFICATION:
 			bodyBuffer = ((QueueModificationRequest)message).toBytes();
 			break;
@@ -218,8 +217,8 @@ public abstract class ProtocolMessage {
         	return ConnectionRequest.fromBytes(input);
         case RETRIEVE_QUEUES:
         	return GetQueuesRequest.fromBytes(input);
-        case MESSAGE_RECEIVED:
-        	return MessageReceivedRequest.fromBytes(input);
+//        case MESSAGE_RECEIVED:
+//        	return MessageReceivedRequest.fromBytes(input);
         case QUEUE_MODIFICATION:
         	return QueueModificationRequest.fromBytes(input);
 		case REQUEST_RESPONSE:

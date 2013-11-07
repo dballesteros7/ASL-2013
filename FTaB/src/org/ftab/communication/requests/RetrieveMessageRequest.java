@@ -15,7 +15,7 @@ import org.ftab.communication.ProtocolMessage;
  * to retreive a paticular message, either from a queue or by a sender. The
  * format for messages is:
  * <br><br>
- * | Filter - 1 byte | Order - 1 byte | # of bytes in name - 2 bytes | name - n bytes | 
+ * | Filter - 1 byte | Order - 1 byte | Pop Message? - 1 byte | # of bytes in name - 2 bytes | name - n bytes | 
  * 
  * @author Jean-Pierre Smith
  *
@@ -137,29 +137,26 @@ public class RetrieveMessageRequest extends ProtocolMessage {
     private final String value;
     
     /**
+     * Flag indicating whether the message should be deleted after it is pulled.
+     */
+    private final boolean popMessage;
+    
+    /**
      * Creates a new request for a message.
      * @param name The name of the queue or sender from which to retreive the message.
      * @param type An enum of type Filter which indicates whether to retreive the message
      * from a particular queue or a particular sender
      * @param order An enum of type Order which indicates whether to retreive the earliest message
      * or the message with the highest priority.
+     * @param andDelete A value signifying whether to delete the message after retrieval
      */
-    public RetrieveMessageRequest(String name, Filter type, Order order) {
+    public RetrieveMessageRequest(String name, Filter type, Order order, boolean andDelete) {
     	this.messageType = MessageType.RETRIEVE_MESSAGE;
     	
     	this.value = name;
     	this.filterType = type;
     	this.orderedBy = order;
-    }
-    
-    /**
-     * Creates a new request for a message based on priority.
-     * @param name The name of the queue or sender from which to retreive the message.
-     * @param type An enum of type Filter which indicates whether to retreive the message
-     * from a particular queue or a particular sender.
-     */
-    public RetrieveMessageRequest(String name, Filter type) {
-    	this(name, type, Order.PRIORITY);
+    	this.popMessage = andDelete;
     }
      
     /**
@@ -189,6 +186,14 @@ public class RetrieveMessageRequest extends ProtocolMessage {
     	return value;
     }
 
+    /**
+     * Whether to pop the message after retrieving it.
+     * @return True to pop the message from the queue, false otherwise.
+     */
+    public boolean isPopMessage() {
+		return popMessage;
+	}
+    
     @Override
 	public ByteBuffer toBytes() {
     	byte[] nameInBytes = null;
@@ -198,12 +203,14 @@ public class RetrieveMessageRequest extends ProtocolMessage {
 			e.printStackTrace();
 		}
     	
-    	final ByteBuffer buffer = ByteBuffer.allocate(4 + nameInBytes.length);
+    	final ByteBuffer buffer = ByteBuffer.allocate(5 + nameInBytes.length);
     	
     	// Put the filter data into the buffer
     	buffer.put(filterType.getByteValue());
     	// Put the order by type
     	buffer.put(orderedBy.getByteValue());
+    	// Put the value whether to pop the message
+    	buffer.put((byte) (popMessage ? 1 : 0));
     	// Put the # of bytes in the name
     	buffer.putShort((short) nameInBytes.length);
     	// Put the name in bytes
@@ -222,6 +229,7 @@ public class RetrieveMessageRequest extends ProtocolMessage {
     public static RetrieveMessageRequest fromBytes(ByteBuffer body) {
     	final Filter filter = Filter.fromByte(body.get());
     	final Order order = Order.fromByte(body.get());
+    	final boolean pop = body.get() == 0 ? false : true;
     	
     	byte[] arr = new byte[body.getShort()];
     	body.get(arr);
@@ -232,6 +240,6 @@ public class RetrieveMessageRequest extends ProtocolMessage {
 			e.printStackTrace();
 		}
     	
-    	return new RetrieveMessageRequest(name, filter, order);
+    	return new RetrieveMessageRequest(name, filter, order, pop);
     }
 }

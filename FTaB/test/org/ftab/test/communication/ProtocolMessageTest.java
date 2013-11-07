@@ -12,7 +12,6 @@ import org.ftab.communication.ProtocolMessage.MessageType;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.GetQueuesRequest;
-import org.ftab.communication.requests.MessageReceivedRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
@@ -130,29 +129,29 @@ public class ProtocolMessageTest {
 		assertEquals(MessageType.RETRIEVE_QUEUES, transRequest.getMessageType());		
 	}
 	
-	/**
-	 * Tests whether Queue requests can be properly serialised and deserialised
-	 */
-	@Test
-	public void testMessageReceivedRequestToFromBytes() {
-		final MessageReceivedRequest req = new MessageReceivedRequest(9238108l, "hellokity", false);
-		final MessageReceivedRequest req2 = new MessageReceivedRequest(9238108l, "hellokity", true);
-		MessageReceivedRequest result;
-		
-		result = (MessageReceivedRequest) ProtocolMessage.fromBytes((ByteBuffer) 
-				ProtocolMessage.toBytes(req).position(ProtocolMessage.HEADER_SIZE));
-		
-		assertEquals(req.getMessageId(), result.getMessageId());
-		assertEquals(req.getQueue(), result.getQueue());
-		assertEquals(req.isPop(), result.isPop());
-		
-		result = (MessageReceivedRequest) ProtocolMessage.fromBytes((ByteBuffer) 
-				ProtocolMessage.toBytes(req2).position(ProtocolMessage.HEADER_SIZE));
-		
-		assertEquals(req2.getMessageId(), result.getMessageId());
-		assertEquals(req2.getQueue(), result.getQueue());
-		assertEquals(req2.isPop(), result.isPop());
-	}
+//	/**
+//	 * Tests whether MessageReceivedRequests can be properly serialised-deserialised
+//	 */
+//	@Test
+//	public void testMessageReceivedRequestToFromBytes() {
+//		final MessageReceivedRequest req = new MessageReceivedRequest(9238108l, "hellokity", false);
+//		final MessageReceivedRequest req2 = new MessageReceivedRequest(9238108l, "hellokity", true);
+//		MessageReceivedRequest result;
+//		
+//		result = (MessageReceivedRequest) ProtocolMessage.fromBytes((ByteBuffer) 
+//				ProtocolMessage.toBytes(req).position(ProtocolMessage.HEADER_SIZE));
+//		
+//		assertEquals(req.getMessageId(), result.getMessageId());
+//		assertEquals(req.getQueue(), result.getQueue());
+//		assertEquals(req.isPop(), result.isPop());
+//		
+//		result = (MessageReceivedRequest) ProtocolMessage.fromBytes((ByteBuffer) 
+//				ProtocolMessage.toBytes(req2).position(ProtocolMessage.HEADER_SIZE));
+//		
+//		assertEquals(req2.getMessageId(), result.getMessageId());
+//		assertEquals(req2.getQueue(), result.getQueue());
+//		assertEquals(req2.isPop(), result.isPop());
+//	}
 	
 	/**
 	 * Tests whether queue modification requeuests can be properly serialised and
@@ -186,7 +185,7 @@ public class ProtocolMessageTest {
 		for (String name : new String[] { "name1", "name 2", "name 3" }) {
 			for (Filter f : Filter.values()) {
 				for (Order o : Order.values()) {
-					RetrieveMessageRequest request = new RetrieveMessageRequest(name, f, o);
+					RetrieveMessageRequest request = new RetrieveMessageRequest(name, f, o, false);
 					
 					RetrieveMessageRequest result = (RetrieveMessageRequest) ProtocolMessage.fromBytes((ByteBuffer) 
 							ProtocolMessage.toBytes(request).position(ProtocolMessage.HEADER_SIZE));

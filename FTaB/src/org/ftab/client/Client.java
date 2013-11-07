@@ -10,7 +10,6 @@ import org.ftab.communication.ProtocolMessage.MessageType;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.GetQueuesRequest;
-import org.ftab.communication.requests.MessageReceivedRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
@@ -355,7 +354,7 @@ public class Client {
 	 */
 	private Message retrieveMessage(String value, Filter filter, Order order, boolean delete) throws RequestResponseException, 
 																										IOException, InvalidHeaderException {
-		this.sendMessage(new RetrieveMessageRequest(value, filter, order));
+		this.sendMessage(new RetrieveMessageRequest(value, filter, order, delete));
 
 		ProtocolMessage message = this.getResponse();
 
@@ -364,9 +363,6 @@ public class Client {
 			throw new RequestResponseException(rqMessage.getDescription(), rqMessage.getStatus());				
 		} else {
 			RetrieveMessageResponse response = (RetrieveMessageResponse) message;
-
-			// Send the confirmation of receiving the message
-			this.sendMessage(new MessageReceivedRequest(response.getMessageId(), response.getQueue(), delete));
 
 			return new Message(response.getMessageId(), response.getContext(), (byte)response.getPriority(),
 					response.getMessageContent(), response.getSender(), response.getQueue(), response.getReceiver());
