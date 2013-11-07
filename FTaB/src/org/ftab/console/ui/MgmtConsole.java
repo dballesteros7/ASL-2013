@@ -116,6 +116,7 @@ public class MgmtConsole  {
 	
 	public static Connection GetSourceConnection() throws SQLException {
 		Connection con = source.getConnection();
+		con.setAutoCommit(false);
 		con.setReadOnly(true);
 		return con;
 	}

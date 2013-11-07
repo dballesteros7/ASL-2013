@@ -20,7 +20,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 
+import org.ftab.console.tablemodels.DateCellRenderer;
 import org.ftab.console.tablemodels.messages.AllMessagesTableModel;
+import org.ftab.console.tablemodels.messages.MessagesTableModel;
 import org.ftab.console.ui.dialogs.ErrorPane;
 
 @SuppressWarnings("serial")
@@ -39,6 +41,8 @@ public class MessagesPanel extends JPanel {
 		
 		tblAllMessages = new JTable();
 		tblAllMessages.setModel(new AllMessagesTableModel());
+		tblAllMessages.getColumnModel().getColumn(MessagesTableModel.CreateTimeColIndex)
+			.setCellRenderer(new DateCellRenderer());
 		scrollPane.setViewportView(tblAllMessages);
 		
 		JPanel panel = new JPanel();
