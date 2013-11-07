@@ -89,7 +89,8 @@ class OneWayClient(threading.Thread):
         return
 
     def getNextMessage(self):
-        found = False;
+        found = False
+        result = []
         while not found and self.running:
             start = time.time()
             result = self.clientInstance.GetWaitingQueues()
@@ -109,20 +110,8 @@ class OneWayClient(threading.Thread):
                 lines = content.split("\n")
                 lastLine = lines[-2]
                 counter = int(lastLine.split(" ")[0])
-                newMessage = ""
-                done = False
-                i = 0
                 newLine = "%d %s\n" % (counter + 1, self.name)
-                while not done and i < (len(lines) - 1):
-                    if(len(newMessage) + len(lines[i]) + 1 > (2000 - len(newLine))):
-                        done = True
-                    else:
-                        newMessage += "%s\n" % lines[i]
-                    i += 1
-                newMessage += newLine
-                return newMessage
+                newMessage = content + newLine
+                return newMessage[-2000:]
             else:
                 raise Exception("Unexpected condition where a message was not found")
-
-if __name__ == '__main__':
-    pass

@@ -3,11 +3,11 @@
     <WorkerThreads>25</WorkerThreads>
     <ClientsPerWorker>2</ClientsPerWorker>
     <LoggingLevel>DEBUG</LoggingLevel>
-    <LogOutput>/home/user25/logs/serverlog%g.log</LogOutput>
+    <LogOutput>C:\Users\Diego\Documents\Logs\serverlog%g.log</LogOutput>
     <ListeningPort>34582</ListeningPort>
     <DatabaseUser>user25</DatabaseUser>
     <DatabasePassword>dbaccess25</DatabasePassword>
-    <DatabaseServer>dryad09.ethz.ch:5454</DatabaseServer>
+    <DatabaseServer>localhost</DatabaseServer>
     <DatabaseName>main</DatabaseName>
     <DatabaseConnections>50</DatabaseConnections>
 </ServerManager>

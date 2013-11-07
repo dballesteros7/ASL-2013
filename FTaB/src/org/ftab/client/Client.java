@@ -378,7 +378,9 @@ public class Client {
 	 * socket.
 	 */
 	private void sendMessage(ProtocolMessage message) throws IOException {
-		channelToServer.write(ProtocolMessage.toBytes(message));
+	    ByteBuffer buffer = ProtocolMessage.toBytes(message);
+	    while(buffer.hasRemaining())
+	        channelToServer.write(buffer);
 	}
 	
 	
@@ -392,13 +394,15 @@ public class Client {
 	private ProtocolMessage getResponse() throws IOException, InvalidHeaderException {
 		// Attempt read the header information from the channel
 		ByteBuffer buffer = ByteBuffer.allocate(ProtocolMessage.HEADER_SIZE);
-		channelToServer.read(buffer);
+		while(buffer.hasRemaining())
+		    channelToServer.read(buffer);
 		buffer.flip();
 
 		// Read the body and convert it into a message
 		int bodySize = ProtocolMessage.getBodySize(buffer);
 		buffer = ByteBuffer.allocate(bodySize);
-		channelToServer.read(buffer);
+		while(buffer.hasRemaining())
+		    channelToServer.read(buffer);
 		buffer.flip();
 		return ProtocolMessage.fromBytes(buffer);
 	}	
