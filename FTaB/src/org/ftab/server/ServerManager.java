@@ -173,8 +173,8 @@ public class ServerManager {
                         // we can assume which one it is.
                         SocketChannel sc = ssc.accept();
                         sc.configureBlocking(false);
-                        LOGGER.info("Received incoming connection " +
-                                ServerLogger.parseSocketAddress(sc) + ".");
+                        LOGGER.info("Received incoming connection "
+                                + ServerLogger.parseSocketAddress(sc) + ".");
                         // Check if the server is full or not, if it is then
                         // register the socket for writing so we can inform the
                         // client that we can't accept the connection. Otherwise
@@ -197,9 +197,9 @@ public class ServerManager {
                         while (responseBuffer.hasRemaining()) {
                             sc.write(responseBuffer);
                         }
-                        LOGGER.info("Refused connection from " +
-                                ServerLogger.parseSocketAddress(sc) +
-                                " because the server is full.");
+                        LOGGER.info("Refused connection from "
+                                + ServerLogger.parseSocketAddress(sc)
+                                + " because the server is full.");
                         key.cancel();
                         sc.close();
                     }
@@ -233,9 +233,9 @@ public class ServerManager {
             for (MessagingWorker worker : workers) {
                 if (!worker.isFull()) {
                     worker.registerChannel(sc);
-                    LOGGER.info("Assigned connection from " +
-                            ServerLogger.parseSocketAddress(sc) +
-                            " to worker " + worker.getIdentifier() + ".");
+                    LOGGER.info("Assigned connection from "
+                            + ServerLogger.parseSocketAddress(sc)
+                            + " to worker " + worker.getIdentifier() + ".");
                     return;
                 }
             }
@@ -243,12 +243,12 @@ public class ServerManager {
             // still below max capacity in the server.
             MessagingWorker newWorker = new MessagingWorker(
                     maxClientsPerWorker, dbConnectionDispatcher);
-            LOGGER.info("Created new worker: " + newWorker.getIdentifier() +
-                    ".");
+            LOGGER.info("Created new worker: " + newWorker.getIdentifier()
+                    + ".");
             newWorker.registerChannel(sc);
-            LOGGER.info("Assigned connection from " +
-                    ServerLogger.parseSocketAddress(sc) + " to worker " +
-                    newWorker.getIdentifier() + ".");
+            LOGGER.info("Assigned connection from "
+                    + ServerLogger.parseSocketAddress(sc) + " to worker "
+                    + newWorker.getIdentifier() + ".");
             threadPool.execute(newWorker);
             workers.add(newWorker);
         } catch (IOException e) {
@@ -302,13 +302,13 @@ public class ServerManager {
      *            command line arguments.
      */
     public static void main(String[] args) {
-        // TODO: Read the configuration file from args
-        final ServerManager manager = ServerFactory
-                .buildManager("manuals/config-example.xml");
+        if (args.length < 1)
+            System.exit(1);
+        final ServerManager manager = ServerFactory.buildManager(args[0]);
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                manager.shutdown();
                 manager.keepRunning = false;
+                manager.shutdown();
             }
         });
         try {
