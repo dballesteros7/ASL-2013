@@ -26,7 +26,7 @@ import org.ftab.communication.requests.SendMessageRequest;
 import org.ftab.communication.responses.GetQueuesResponse;
 import org.ftab.communication.responses.RequestResponse;
 import org.ftab.communication.responses.RetrieveMessageResponse;
-import org.ftab.database.exceptions.QueueAlreadyExistsException;
+import org.ftab.client.exceptions.QueueAEException;
 import org.ftab.pubenums.Filter;
 import org.ftab.pubenums.Order;
 
@@ -194,13 +194,13 @@ public class ServerRPC {
 	/**
 	 * Creates a queue in the system
 	 * @param queueName The name of the queue to be created
-	 * @throws QueueAlreadyExistsException If the queue already exists
+	 * @throws QueueAEException If the queue already exists
 	 * @throws IOException If an error occurred on the channel
 	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 */
 	public void CreateQueue(String queueName) 
-			throws QueueAlreadyExistsException, IOException, InvalidHeaderException, UnspecifiedErrorException {
+			throws QueueAEException, IOException, InvalidHeaderException, UnspecifiedErrorException {
 		this.sendMessage(new QueueModificationRequest(queueName, false));
 		
 		RequestResponse msg = (RequestResponse) this.getResponse();
@@ -209,7 +209,7 @@ public class ServerRPC {
 		case SUCCESS:
 			break;
 		case QUEUE_EXISTS:
-			throw new QueueAlreadyExistsException(queueName);
+			throw new QueueAEException(queueName);
 		case EXCEPTION:
 			throw new UnspecifiedErrorException();
 		default:

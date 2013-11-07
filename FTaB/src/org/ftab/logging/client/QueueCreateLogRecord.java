@@ -3,7 +3,7 @@ package org.ftab.logging.client;
 import java.util.logging.Level;
 
 import org.ftab.client.Client;
-import org.ftab.client.exceptions.QueueAlreadyExistsException;
+import org.ftab.client.exceptions.QueueAEException;
 import org.ftab.logging.SystemEvent;
 
 /**
@@ -66,7 +66,7 @@ public class QueueCreateLogRecord extends ClientLogRecord {
 		 * If the exception thrown was not one of the expected errors then
 		 * mark this log as severe
 		 */
-		if (thrown.getClass() != QueueAlreadyExistsException.class) {
+		if (thrown.getClass() != QueueAEException.class) {
 			this.setLevel(Level.SEVERE);
 		}
 		

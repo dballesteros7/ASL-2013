@@ -13,7 +13,7 @@ import org.ftab.client.exceptions.QueueNotEmptyException;
 import org.ftab.client.exceptions.UnspecifiedErrorException;
 import org.ftab.client.shell.ClientShell.Options;
 import org.ftab.communication.exceptions.InvalidHeaderException;
-import org.ftab.database.exceptions.QueueAlreadyExistsException;
+import org.ftab.client.exceptions.QueueAEException;
 
 /**
  * Class for the shell to manage the operations on queues
@@ -60,7 +60,7 @@ final class QueuesOptionShell {
 			System.out.println("The operation was completed successfully.");
 		} catch (CancelOperationException e) {
 			return;
-		} catch (QueueAlreadyExistsException e) {
+		} catch (QueueAEException e) {
 			System.out.println(
 					String.format("The operation was not completed for the following reason:\n%s", 
 							e.getMessage()));

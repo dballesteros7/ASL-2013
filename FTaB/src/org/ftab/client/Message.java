@@ -203,10 +203,10 @@ public class Message {
     
     /**
      * Gets a summary of the details of the message
-     * @return A string summarizing the contents of this messages
+     * @return A string summarising the contents of this messages
      */
     public String getSummary() {
-    	return String.format("Message from %s to %s on %d queues with priority %d, context %s and %d characters.",
+    	return String.format("Message from %s to %s on %d queues with priority %d, context %s and %d characters",
     			this.getSender(), (this.getReceiver() == null) ? "no one" : this.getReceiver(), this.queues.size(),
     					this.getPriority(), this.getContext().name(), this.getContent().length());
     }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,8 @@ import org.ftab.client.exceptions.ClientInexistentException;
 import org.ftab.client.exceptions.FullServerException;
 import org.ftab.client.exceptions.UnspecifiedErrorException;
 import org.ftab.communication.exceptions.InvalidHeaderException;
+import org.ftab.logging.client.ClientLogger;
+import org.ftab.logging.client.formatters.MessageOnlyFormatter;
 
 /**
  * Shell interface for the client
@@ -132,6 +135,10 @@ public final class ClientShell {
 				in.close();
 			}
 		});
+		
+		// Setup the logger
+		ClientLogger.setLevel(Level.FINEST);
+		ClientLogger.addLogStream("C:\\logs\\clientlog%g.log", null, new MessageOnlyFormatter());
 		
 		client = new Client(getUsernameFromConsole());
 		client.setSuppressingErrors(args.length > 0 ? Boolean.parseBoolean(args[0]) : false);

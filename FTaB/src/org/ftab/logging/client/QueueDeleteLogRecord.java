@@ -3,7 +3,7 @@ package org.ftab.logging.client;
 import java.util.logging.Level;
 
 import org.ftab.client.Client;
-import org.ftab.client.exceptions.QueueAlreadyExistsException;
+import org.ftab.client.exceptions.QueueAEException;
 import org.ftab.client.exceptions.QueueInexistentException;
 import org.ftab.logging.SystemEvent;
 
@@ -68,7 +68,7 @@ public class QueueDeleteLogRecord extends ClientLogRecord {
 		 * mark this log as severe
 		 */
 		if (thrown.getClass() != QueueInexistentException.class && 
-				thrown.getClass() != QueueAlreadyExistsException.class) {
+				thrown.getClass() != QueueAEException.class) {
 			this.setLevel(Level.SEVERE);
 		}
 		

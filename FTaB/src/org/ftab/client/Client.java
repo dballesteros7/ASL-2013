@@ -12,7 +12,7 @@ import org.ftab.client.exceptions.UnspecifiedErrorException;
 import org.ftab.client.serverrpc.ServerRPC;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.communication.requests.SendMessageRequest.Context;
-import org.ftab.database.exceptions.QueueAlreadyExistsException;
+import org.ftab.client.exceptions.QueueAEException;
 import org.ftab.logging.client.ClientConnectionRecord;
 import org.ftab.logging.client.ClientDisconRecord;
 import org.ftab.logging.client.GetMessageLogRecord;
@@ -294,7 +294,7 @@ public class Client {
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 */
 	public boolean CreateQueue(String queueName) 
-			throws UnspecifiedErrorException, QueueAlreadyExistsException, IOException, InvalidHeaderException {
+			throws UnspecifiedErrorException, QueueAEException, IOException, InvalidHeaderException {
 		final QueueCreateLogRecord record = new QueueCreateLogRecord(this, queueName);
 		LOGGER.log(record);
 		
@@ -306,7 +306,7 @@ public class Client {
 		} catch (UnspecifiedErrorException e) {
 			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
 			if (!suppressingErrors) throw e;
-		} catch (QueueAlreadyExistsException e) {
+		} catch (QueueAEException e) {
 			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
 			if (!suppressingErrors) throw e;
 		} catch (IOException e) {

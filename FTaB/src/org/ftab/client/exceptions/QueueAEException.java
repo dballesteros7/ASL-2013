@@ -6,7 +6,7 @@ package org.ftab.client.exceptions;
  * @author Jean-Pierre Smith
  */
 @SuppressWarnings("serial")
-public class QueueAlreadyExistsException extends FTaBServerException {
+public class QueueAEException extends FTaBServerException {
 	/**
 	 * The name of the queue that already exists
 	 */
@@ -17,7 +17,7 @@ public class QueueAlreadyExistsException extends FTaBServerException {
 	 * @param queueName The name of the queue that could not be created due to already
 	 * existing.
 	 */
-	public QueueAlreadyExistsException(String queueName) {
+	public QueueAEException(String queueName) {
 		super(String.format("Could not create the queue - %s because it already exists.", 
 				queueName));
 		
@@ -27,7 +27,7 @@ public class QueueAlreadyExistsException extends FTaBServerException {
 	/**
 	 * Creates a new exception specifying that the queue already exists.
 	 */
-	public QueueAlreadyExistsException() {
+	public QueueAEException() {
 		super("Could not create the queue because it already exists.");
 		
 		this.queueName = null;

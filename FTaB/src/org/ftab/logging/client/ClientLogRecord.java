@@ -24,7 +24,12 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	/**
 	 * The username of the client
 	 */
-	private String clientUsername;
+	private final String clientUsername;
+	
+	/**
+	 * The string rep of the server
+	 */
+	private final String clientServerString;
 	
 	/**
 	 * The time elapsed since the period passed as a constructor argument 
@@ -43,6 +48,7 @@ abstract class ClientLogRecord extends SystemLogRecord {
 		super(level, eventCategory, String.format("%s <-> %s | %s", client.getUsername(), client.getServer().toString(), msg));
 		
 		this.clientUsername = client.getUsername();
+		this.clientServerString = client.getServer().toString();
 		
 		/* Log the time elapsed since a related event */
 		if (millis < 0) {
@@ -63,6 +69,13 @@ abstract class ClientLogRecord extends SystemLogRecord {
 		this(level, client, -1l, eventCategory, msg);
 	}
 		
+	
+	@Override
+	public void setMessage(String message) {
+		super.setMessage(String.format("%s <-> %s | %s", 
+				clientUsername, clientServerString, message));
+	}
+	
 	/**
 	 * Gets the username of the client
 	 * @return The username of the client
