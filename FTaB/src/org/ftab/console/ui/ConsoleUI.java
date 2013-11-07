@@ -1,4 +1,4 @@
-package ui;
+package org.ftab.console.ui;
 
 import java.awt.EventQueue;
 
