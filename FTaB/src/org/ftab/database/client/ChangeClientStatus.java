@@ -22,8 +22,8 @@ public class ChangeClientStatus {
      * SQL statement to modify the online status of client using its username
      * field.
      */
-    private static final String SQL_BY_USERNAME =
-            "UPDATE client SET online = ?" + " WHERE username = ?";
+    private static final String SQL_BY_USERNAME = "UPDATE client SET online = ?"
+            + " WHERE username = ?";
 
     /**
      * Change the online status of the client given its username.
@@ -37,7 +37,7 @@ public class ChangeClientStatus {
      * @throws SQLException
      *             if the update can't be performed.
      */
-    public void execute(String username, boolean status, Connection conn)
+    public static void execute(String username, boolean status, Connection conn)
             throws SQLException {
         PreparedStatement stmt = null;
         try {
@@ -63,7 +63,7 @@ public class ChangeClientStatus {
      * @throws SQLException
      *             if the update can't be performed.
      */
-    public void execute(int id, boolean status, Connection conn)
+    public static void execute(int id, boolean status, Connection conn)
             throws SQLException {
         PreparedStatement stmt = null;
         try {

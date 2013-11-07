@@ -13,20 +13,18 @@ import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 
 import org.ftab.database.Client;
-import org.ftab.database.Create;
-import org.ftab.database.Destroy;
 import org.ftab.database.client.ChangeClientStatus;
 import org.ftab.database.client.CreateClient;
 import org.ftab.database.client.FetchClient;
 import org.ftab.database.client.RetrieveClients;
+import org.ftab.quality.server.ServerInit;
+import org.ftab.server.DBConnectionDispatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.postgresql.ds.PGPoolingDataSource;
 
 /**
  * Unit test for all the client related DAOs.
@@ -39,7 +37,7 @@ public class ClientTest {
     /**
      * Connection pool for the database
      */
-    PGPoolingDataSource source;
+    private DBConnectionDispatcher source;
 
     /**
      * Setups the database connection pool and creates necessary tables and
@@ -50,35 +48,8 @@ public class ClientTest {
      */
     @Before
     public void setUp() throws SQLException {
-        // Setup a simple connection pool of size 10
-        source = new PGPoolingDataSource();
-        source.setDataSourceName("Test data source");
-        source.setServerName("dryad01.ethz.ch"); // Test server
-        source.setDatabaseName("test1"); // Test DB
-        source.setUser("user25"); // Group user
-        source.setPassword("dbaccess25"); // OMG! It's a password in the code!!
-                                          // It's ok we are protected files
-        source.setMaxConnections(10); // Try a maximum of 10 pooled connections
-
-        // Get a connection and create schema
-        Connection conn = null;
-        Statement stmt = null;
-        try {
-            conn = source.getConnection();
-            conn.setAutoCommit(false);
-            Create c = new Create();
-            c.execute(true, false, false, conn);
-            conn.commit();
-        } catch (SQLException ex) {
-            fail("Got an SQL exception while setting up the test.");
-        } finally {
-            if (stmt != null)
-                stmt.close();
-            if (conn != null) {
-                conn.rollback();
-                conn.close();
-            }
-        }
+        source = ServerInit.connectToDatabase(10);
+        ServerInit.setupSchema(source);
     }
 
     /**
@@ -89,21 +60,9 @@ public class ClientTest {
      */
     @After
     public void tearDown() throws Exception {
-        Connection conn = null;
-        try {
-            conn = source.getConnection();
-            conn.setAutoCommit(false);
-            Destroy d = new Destroy();
-            d.execute(true, false, false, conn);
-            conn.commit();
-        } catch (SQLException ex) {
-            fail("Got an SQL exception while tearing down the test.");
-        } finally {
-            if (conn != null)
-                conn.close();
-            if (source != null)
-                source.close();
-        }
+        ServerInit.destroySchema(source);
+        if (source != null)
+            source.closePool();
     }
 
     /**
@@ -117,18 +76,16 @@ public class ClientTest {
     public void testInsertionRetrieval() throws SQLException {
         Connection conn = null;
         try {
-            FetchClient f = new FetchClient();
-            CreateClient cc = new CreateClient();
-            conn = source.getConnection();
+            conn = source.retrieveDatabaseConnection();
             conn.setAutoCommit(false);
 
             // Create Bob and Alice
-            cc.execute("Bob", true, conn);
-            cc.execute("Alice", false, conn);
+            CreateClient.execute("Bob", true, conn);
+            CreateClient.execute("Alice", false, conn);
 
             // Retrieve them
-            Client bob = f.execute("Bob", conn);
-            Client alice = f.execute("Alice", conn);
+            Client bob = FetchClient.execute("Bob", conn);
+            Client alice = FetchClient.execute("Alice", conn);
 
             // Check data validity
             assertEquals(bob.getClientId(), 1);
@@ -140,7 +97,7 @@ public class ClientTest {
             assertFalse(alice.isClientOnline());
 
             // Retrieve inexistent Larry
-            Client larry = f.execute("Larry", conn);
+            Client larry = FetchClient.execute("Larry", conn);
             assertNull(larry);
 
             conn.commit();
@@ -164,30 +121,27 @@ public class ClientTest {
     public void testConnectionStatus() throws SQLException {
         Connection conn = null;
         try {
-            FetchClient fc = new FetchClient();
-            CreateClient cc = new CreateClient();
-            ChangeClientStatus ccs = new ChangeClientStatus();
-            conn = source.getConnection();
+            conn = source.retrieveDatabaseConnection();
             conn.setAutoCommit(false);
 
             // Create Bob and Alice
-            cc.execute("Bob", false, conn);
-            cc.execute("Alice", false, conn);
+            CreateClient.execute("Bob", false, conn);
+            CreateClient.execute("Alice", false, conn);
 
             // Change their status to connected by username and id
-            ccs.execute("Bob", true, conn);
-            ccs.execute(2, true, conn);
+            ChangeClientStatus.execute("Bob", true, conn);
+            ChangeClientStatus.execute(2, true, conn);
 
             // Retrieve them and check data validity
-            Client bob = fc.execute("Bob", conn);
-            Client alice = fc.execute("Alice", conn);
+            Client bob = FetchClient.execute("Bob", conn);
+            Client alice = FetchClient.execute("Alice", conn);
             assertTrue(bob.isClientOnline());
             assertTrue(alice.isClientOnline());
 
             // Disconnect Alice and check
-            ccs.execute("Alice", false, conn);
-            bob = fc.execute("Bob", conn);
-            alice = fc.execute("Alice", conn);
+            ChangeClientStatus.execute("Alice", false, conn);
+            bob = FetchClient.execute("Bob", conn);
+            alice = FetchClient.execute("Alice", conn);
             assertTrue(bob.isClientOnline());
             assertFalse(alice.isClientOnline());
 
@@ -211,11 +165,10 @@ public class ClientTest {
     private void stuffDatabase(int n) throws SQLException {
         Connection conn = null;
         try {
-            CreateClient cc = new CreateClient();
-            conn = source.getConnection();
+            conn = source.retrieveDatabaseConnection();
             conn.setAutoCommit(false);
             for (int i = 1; i <= n; i++) {
-                cc.execute("Bob" + i, (i % 2 == 0), conn);
+                CreateClient.execute("Bob" + i, (i % 2 == 0), conn);
             }
             conn.commit();
         } catch (Exception ex) {
@@ -240,12 +193,11 @@ public class ClientTest {
         try {
             // Stuff 1000 Bobs
             stuffDatabase(1000);
-            RetrieveClients rc = new RetrieveClients();
-            conn = source.getConnection();
+            conn = source.retrieveDatabaseConnection();
             conn.setAutoCommit(false);
 
             // Retrieve all clients and check them one by one
-            ArrayList<Client> result = rc.execute(conn);
+            ArrayList<Client> result = RetrieveClients.execute(conn);
             for (Client userClient : result) {
                 int id = userClient.getClientId();
                 assertEquals("Bob" + id, userClient.getClientUsername());

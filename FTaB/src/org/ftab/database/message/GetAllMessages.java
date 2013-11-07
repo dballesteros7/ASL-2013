@@ -28,7 +28,7 @@ public class GetAllMessages {
     private final static String SQL = "SELECT message.id AS msg_id, "
             + "queue.id AS queue_id, context, prio, create_time, message,"
             + "rc.username AS receiver, sc.username AS sender, queue.name "
-            + "FROM message " + "INNER JOIN msg_queue_assoc "
+            + "FROM message INNER JOIN msg_queue_assoc "
             + "ON msg_queue_assoc.message_id = message.id "
             + "INNER JOIN queue ON msg_queue_assoc.queue_id = queue.id "
             + "INNER JOIN client sc ON sc.id = message.sender "
@@ -45,7 +45,7 @@ public class GetAllMessages {
      * @throws SQLException
      *             if there is an unexpected error while accessing the database.
      */
-    public ArrayList<Message> execute(Connection conn) throws SQLException {
+    public static ArrayList<Message> execute(Connection conn) throws SQLException {
         PreparedStatement stmt = null;
         ArrayList<Message> formattedResult = new ArrayList<Message>();
         try {
@@ -64,6 +64,7 @@ public class GetAllMessages {
                                 result.getString("receiver"));
                 formattedResult.add(msg);
             }
+            conn.commit();
             return formattedResult;
         } finally {
             if (stmt != null)

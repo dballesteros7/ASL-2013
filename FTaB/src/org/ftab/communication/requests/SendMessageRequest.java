@@ -279,7 +279,6 @@ public class SendMessageRequest extends ProtocolMessage {
 				e.printStackTrace();
 			}
 		}
-		
 		return new SendMessageRequest(message, prio, cont, 
 				Arrays.asList(queueArray), receiverString);
 	}

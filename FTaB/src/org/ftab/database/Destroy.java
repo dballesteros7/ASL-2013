@@ -50,7 +50,7 @@ public class Destroy {
      * @throws SQLException
      *             if one of the tables could not be dropped.
      */
-    public void execute(boolean client, boolean queue, boolean msg,
+    public static void execute(boolean client, boolean queue, boolean msg,
             Connection conn) throws SQLException {
         Statement stmt = null;
         try {
