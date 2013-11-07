@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="FTaB/src"/>
+	<classpathentry kind="src" path="FTaB/test"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="C:/Users/Jean-Pierre/Desktop/MSc-SemI/External Jars/postgresql-9.2-1003.jdbc4.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
