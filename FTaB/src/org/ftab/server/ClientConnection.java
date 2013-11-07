@@ -772,10 +772,16 @@ public class ClientConnection {
             ArrayList<String> result = GetQueuesWithMessages.execute(
                     client.getClientId(), conn);
             conn.commit();
-            LOGGER.info("Found " + result.size() +
-                    " queues with messages waiting for " + address + ".");
-            GetQueuesResponse queueResponse = new GetQueuesResponse(result);
-            return ProtocolMessage.toBytes(queueResponse);
+            if(result.size() > 0){
+                LOGGER.info("Found " + result.size() +
+                        " queues with messages waiting for " + address + ".");
+                GetQueuesResponse queueResponse = new GetQueuesResponse(result);
+                return ProtocolMessage.toBytes(queueResponse);
+            } else {
+                LOGGER.info("Did not find any queues with messages waiting for " + address + ".");
+                RequestResponse response = new RequestResponse(Status.NO_QUEUE);
+                return ProtocolMessage.toBytes(response);
+            }
         } catch (SQLException e) {
             RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());

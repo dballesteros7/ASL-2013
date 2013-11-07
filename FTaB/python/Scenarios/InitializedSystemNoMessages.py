@@ -17,7 +17,7 @@ def main():
                                              config.get("dbconnection", 'password'),
                                              config.get("dbconnection", 'server'),
                                              config.get("dbconnection", 'database'),
-                                             5)
+                                             1)
     conn = None
     try:
         conn = dispatch.retrieveDatabaseConnection()
