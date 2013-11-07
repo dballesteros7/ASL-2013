@@ -20,6 +20,7 @@ import javax.swing.border.EmptyBorder;
 
 import org.ftab.console.ui.MgmtConsole;
 
+@SuppressWarnings("serial")
 public class ConnectionDetailsDialog extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
@@ -32,6 +33,7 @@ public class ConnectionDetailsDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public ConnectionDetailsDialog() {
+		setTitle("Connection Settings");
 		setModalityType(ModalityType.DOCUMENT_MODAL);
 		setBounds(100, 100, 325, 204);
 		getContentPane().setLayout(new BorderLayout());

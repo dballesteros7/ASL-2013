@@ -1,8 +1,3 @@
-/**
- * FTaBTableModel.java 
- * Created: Oct 11, 2013
- * @author Jean-Pierre Smith
- */
 package org.ftab.console.tablemodels;
 
 import java.sql.Connection;
@@ -16,13 +11,18 @@ import org.postgresql.ds.PGPoolingDataSource;
 /**
  * Abstract table model for quickly loading display-only tables in 
  * the Management Console.
+ * @author Jean-Pierre Smith
+ *
+ * @param <S> The return type of the refresh method
+ * @param <T> The type of the parameter passed to the refresh method
  */
-public abstract class FTaBTableModel extends DefaultTableModel {
+@SuppressWarnings("serial")
+public abstract class FTaBTableModel<S, T> extends DefaultTableModel {
 	/**
 	 * The class types of the data of the columns present in the
 	 * table.
 	 */
-	private final Class[] columnTypes;
+	private final Class<?>[] columnTypes;
 	
 	/**
 	 * Creates a new FTaBTableModel with the specified columns containing
@@ -30,7 +30,7 @@ public abstract class FTaBTableModel extends DefaultTableModel {
 	 * @param columNames A string array containing the names of each of the columns.
 	 * @param columnTypes The type of the data in each column named above.
 	 */
-	public FTaBTableModel(String[] columNames, Class[] columnTypes) {
+	public FTaBTableModel(String[] columNames, Class<?>[] columnTypes) {
 		super(columNames, 0);
 		
 		this.columnTypes = columnTypes;
@@ -53,7 +53,7 @@ public abstract class FTaBTableModel extends DefaultTableModel {
 	 * @throws SQLException If the refresh fails due to an issue with the 
 	 * database connection.
 	 */
-	public Object Refresh(Object arg) throws SQLException {
+	public S Refresh(T arg) throws SQLException {
 		return Refresh(arg, null);
 	}
 	
@@ -63,7 +63,7 @@ public abstract class FTaBTableModel extends DefaultTableModel {
 	 * @throws SQLException If the refresh fails due to an issue with the 
 	 * database connection.
 	 */
-	public Object Refresh() throws SQLException {
+	public S Refresh() throws SQLException {
 		return Refresh(null, null);
 	}
 
@@ -76,7 +76,7 @@ public abstract class FTaBTableModel extends DefaultTableModel {
 	 * @throws SQLException If the refresh fails due to an issue with the 
 	 * database connection.
 	 */
-	public Object Refresh(Object arg, PGPoolingDataSource source) throws SQLException {
+	public S Refresh(T arg, PGPoolingDataSource source) throws SQLException {
 		// Clear the table
 		this.setRowCount(0);
 
@@ -108,5 +108,5 @@ public abstract class FTaBTableModel extends DefaultTableModel {
 	 * @return An optional return value.
 	 * @throws SQLException If an error occurs while using the connection.
 	 */
-	protected abstract Object LoadData(Object arg, Connection conn) throws SQLException;
+	protected abstract S LoadData(T arg, Connection conn) throws SQLException;
 }

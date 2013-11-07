@@ -7,8 +7,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.ftab.console.tablemodels.ClientsTableModel;
-import org.ftab.console.tablemodels.ClientsTableModel.CTReturnObject;
+import org.ftab.console.tablemodels.clients.AllClientsTableModel;
+import org.ftab.console.tablemodels.clients.structs.AllClientsStats;
 import org.ftab.database.Create;
 import org.ftab.database.Destroy;
 import org.ftab.database.client.CreateClient;
@@ -147,8 +147,8 @@ public class ConsoleTablesTest {
             conn = source.getConnection();
             conn.setAutoCommit(true);
             
-            ClientsTableModel model = new ClientsTableModel();
-            CTReturnObject ro = (CTReturnObject) model.Refresh(null, source);
+            AllClientsTableModel model = new AllClientsTableModel();
+            AllClientsStats ro = (AllClientsStats) model.Refresh(null, source);
             
             assertEquals(0, ro.getOnlineClients());
             assertEquals(2, ro.getTotalClients());
@@ -158,7 +158,7 @@ public class ConsoleTablesTest {
             
             new CreateClient().execute("Client#3", true, conn);
             
-            ro = (CTReturnObject) model.Refresh(null, source);
+            ro = (AllClientsStats) model.Refresh(null, source);
             assertEquals(1, ro.getOnlineClients());
             assertEquals(3, ro.getTotalClients());
             assertEquals(3, model.getRowCount());
