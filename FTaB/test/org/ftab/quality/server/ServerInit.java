@@ -33,8 +33,8 @@ public class ServerInit {
             throws SQLException {
         // Setup a simple connection pool of size 10
         DBConnectionDispatcher source = new DBConnectionDispatcher();
-        source.configureDatabaseConnectionPool("unittester", "likeineedone",
-                "localhost", "unittestdiego", poolSize);
+        source.configureDatabaseConnectionPool("user25", "dbaccess25",
+                "dryad09.ethz.ch:5454", "test1", poolSize);
 
         return source;
     }

@@ -99,6 +99,18 @@ public class MessagingWorker implements Runnable {
     }
 
     /**
+     * Returns the remaining capacity of the worker.
+     * 
+     * @return number of clients that can be assigned to the worker.
+     */
+    public int remainingCapacity() {
+        synchronized (guardlock) {
+            selector.wakeup();
+            return capacity - selector.keys().size();
+        }
+    }
+    
+    /**
      * Indicates if the worker is shutdown.
      * 
      * @return true if the worker is not running, false otherwise.

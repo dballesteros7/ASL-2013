@@ -121,7 +121,8 @@ public abstract class ProtocolMessage {
     public static int getBodySize(ByteBuffer header) throws InvalidHeaderException{
         // Check that the header has the correct format
     	if (header.remaining() != HEADER_SIZE) {
-    		throw new InvalidHeaderException("The supplied header is not of the correct size.");
+    		throw new InvalidHeaderException("The supplied header is not of the correct size. "
+    		        + "Expected: " + HEADER_SIZE + " but got " + header.remaining());
     	}
     	else
     	{

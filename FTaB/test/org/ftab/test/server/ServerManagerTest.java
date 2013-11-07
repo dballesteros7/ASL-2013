@@ -61,9 +61,11 @@ public class ServerManagerTest {
      * 
      * @throws SQLException
      *             if there is a problem setting up the database.
+     * @throws InterruptedException
+     *             if we get interrupted while waiting for the server to start.
      */
     @Before
-    public void setUp() throws SQLException {
+    public void setUp() throws SQLException, InterruptedException {
         dispatch = ServerInit.connectToDatabase(10);
         ServerInit.setupSchema(dispatch);
         alice = new Client("Alice");
@@ -71,6 +73,7 @@ public class ServerManagerTest {
         manager = ServerFactory.buildManager("./config/config-unittest.xml");
         serverThread = new Thread(manager);
         serverThread.start();
+        Thread.sleep(1000);
     }
 
     /**
@@ -78,12 +81,16 @@ public class ServerManagerTest {
      */
     @After
     public void tearDown() throws Exception {
-        serverThread.interrupt();
-        manager.stop();
-        serverThread.join();
-        manager.shutdown();
-        ServerInit.destroySchema(dispatch);
-        dispatch.closePool();
+        if(serverThread != null){
+            serverThread.interrupt();
+            manager.stop();
+            serverThread.join();
+            manager.shutdown();
+        }
+        if(dispatch != null){
+            ServerInit.destroySchema(dispatch);
+            dispatch.closePool();
+        }
     }
 
     @Test
@@ -151,7 +158,8 @@ public class ServerManagerTest {
             assertEquals(msg.getQueueName(), "Bob's Inbox");
             assertTrue(bob.SendMessage("The ping-pong ball",
                     (byte) (i % 10 + 1), Context.RESPONSE, aliceInbox));
-            msg = alice.ViewMessageFromQueue("Alice's Inbox", false, Order.TIMESTAMP);
+            msg = alice.ViewMessageFromQueue("Alice's Inbox", false,
+                    Order.TIMESTAMP);
             assertEquals(msg.getContent(), "The ping-pong ball");
             assertEquals(msg.getContext(), Context.RESPONSE);
             assertEquals(msg.getSender(), "Bob");

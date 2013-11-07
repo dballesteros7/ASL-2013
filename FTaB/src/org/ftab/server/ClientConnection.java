@@ -173,6 +173,7 @@ public class ClientConnection {
                     LOGGER.severe("Received an invalid header from " +
                             ServerLogger.parseSocketAddress(sc) +
                             " , ignoring it and awaiting a new one.");
+                    LOGGER.log(Level.SEVERE, "", e);
                     headerBuffer.clear();
                 }
             }

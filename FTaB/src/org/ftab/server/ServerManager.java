@@ -173,8 +173,8 @@ public class ServerManager implements Runnable {
                         // we can assume which one it is.
                         SocketChannel sc = ssc.accept();
                         sc.configureBlocking(false);
-                        LOGGER.info("Received incoming connection " +
-                                ServerLogger.parseSocketAddress(sc) + ".");
+                        LOGGER.info("Received incoming connection "
+                                + ServerLogger.parseSocketAddress(sc) + ".");
                         // Check if the server is full or not, if it is then
                         // register the socket for writing so we can inform the
                         // client that we can't accept the connection. Otherwise
@@ -197,9 +197,9 @@ public class ServerManager implements Runnable {
                         while (responseBuffer.hasRemaining()) {
                             sc.write(responseBuffer);
                         }
-                        LOGGER.info("Refused connection from " +
-                                ServerLogger.parseSocketAddress(sc) +
-                                " because the server is full.");
+                        LOGGER.info("Refused connection from "
+                                + ServerLogger.parseSocketAddress(sc)
+                                + " because the server is full.");
                         key.cancel();
                         sc.close();
                     }
@@ -256,40 +256,46 @@ public class ServerManager implements Runnable {
     }
 
     /**
-     * Delegate an incoming socket channel to a worker, if all workers are full
-     * then spawn a new one and assign the SocketChannel to it. This method
-     * assumes that adding a worker won't take the server over its configured
-     * capacity.
+     * Delegate an incoming socket channel to a worker, first creating all
+     * possible workers until maxThreads is reached and then filling them up in
+     * a round-robin fashion. This method assumes that adding a worker won't
+     * take the server over its configured capacity.
      * 
      * @param sc
      *            SocketChannel to assign to a worker.
      */
     private void delegateSocketToWorker(SocketChannel sc) {
         try {
-            // Check if any of the existing workers is not full, if so then
-            // register the channel to the first one with room for another
-            // client.
-            for (MessagingWorker worker : workers) {
-                if (!worker.isFull()) {
-                    worker.registerChannel(sc);
-                    LOGGER.info("Assigned connection from " +
-                            ServerLogger.parseSocketAddress(sc) +
-                            " to worker " + worker.getIdentifier() + ".");
-                    return;
+
+            // Check if we are not in the limit of workers, if so then create
+            // one.
+            if (workers.size() < maxThreads) {
+                MessagingWorker newWorker = new MessagingWorker(
+                        maxClientsPerWorker, dbConnectionDispatcher);
+                LOGGER.info("Created new worker: " + newWorker.getIdentifier()
+                        + ".");
+                newWorker.registerChannel(sc);
+                LOGGER.info("Assigned connection from "
+                        + ServerLogger.parseSocketAddress(sc) + " to worker "
+                        + newWorker.getIdentifier() + ".");
+                threadPool.execute(newWorker);
+                workers.add(newWorker);
+            } else {
+                // If not then find the worker with the least amount of users.
+                MessagingWorker minWorker = null;
+                int maxCapacity = 0;
+                for (MessagingWorker worker : workers) {
+                    int remainingCap = worker.remainingCapacity();
+                    if (remainingCap > maxCapacity) {
+                        minWorker = worker;
+                        maxCapacity = remainingCap;
+                    }
                 }
+                minWorker.registerChannel(sc);
+                LOGGER.info("Assigned connection from "
+                        + ServerLogger.parseSocketAddress(sc) + " to worker "
+                        + minWorker.getIdentifier() + ".");
             }
-            // If no worker is empty, create a new worker since we know we are
-            // still below max capacity in the server.
-            MessagingWorker newWorker = new MessagingWorker(
-                    maxClientsPerWorker, dbConnectionDispatcher);
-            LOGGER.info("Created new worker: " + newWorker.getIdentifier() +
-                    ".");
-            newWorker.registerChannel(sc);
-            LOGGER.info("Assigned connection from " +
-                    ServerLogger.parseSocketAddress(sc) + " to worker " +
-                    newWorker.getIdentifier() + ".");
-            threadPool.execute(newWorker);
-            workers.add(newWorker);
         } catch (IOException e) {
             LOGGER.severe("There was an error creating a worker");
             LOGGER.log(Level.SEVERE, "", e);
