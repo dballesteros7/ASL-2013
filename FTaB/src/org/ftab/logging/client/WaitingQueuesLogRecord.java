@@ -30,17 +30,17 @@ public class WaitingQueuesLogRecord extends ClientLogRecord {
 	/**
 	 * Creates a new record for the end of a successful fetch
 	 * @param client The client that requested the fetch
-	 * @param millis The time since the start of the attempt
+	 * @param startRecord The record logging the start of the attempt
 	 */
-	public WaitingQueuesLogRecord(Client client, Iterable<String> queues, long millis) {
-		super(Level.FINE, client, millis, SystemEvent.FETCH_WAITING_QUEUES, ""); 
+	public WaitingQueuesLogRecord(Client client, Iterable<String> queues, WaitingQueuesLogRecord startRecord) {
+		super(Level.FINE, client, SystemEvent.FETCH_WAITING_QUEUES, "", startRecord); 
 		
 		/* Count the number of queues returned */
 		int count = 0;
 		for (@SuppressWarnings("unused") String name : queues) count++; 
 		
 		this.setMessage(String.format("Successfully received the names of %d queues after %d milliseconds.", 
-				count, this.getElapsedTime()));
+				count, this.getChainElapsedTime()));
 		
 		this.isAttemptStart = false;
 	}
@@ -49,13 +49,13 @@ public class WaitingQueuesLogRecord extends ClientLogRecord {
 	 * Creates a new record for the unsuccessful fetch
 	 * @param client The client that attempted to fetch the names of the queues
 	 * @param thrown The exception thrown on the attempt
-	 * @param millis The time since the start of the attempt
+	 * @param startRecord The record logging the start of the attempt
 	 */
-	public WaitingQueuesLogRecord(Client client, Throwable thrown, long millis) {
-		super(Level.SEVERE, client, millis, SystemEvent.FETCH_WAITING_QUEUES, "");				
+	public WaitingQueuesLogRecord(Client client, Throwable thrown, WaitingQueuesLogRecord startRecord) {
+		super(Level.SEVERE, client, SystemEvent.FETCH_WAITING_QUEUES, "", startRecord);				
 				
 		this.setMessage(String.format("The fetch failed after %d milliseconds, reason: %s", 
-				this.getElapsedTime(), thrown.getMessage()));
+				this.getChainElapsedTime(), thrown.getMessage()));
 				
 		this.isAttemptStart = false;
 	}

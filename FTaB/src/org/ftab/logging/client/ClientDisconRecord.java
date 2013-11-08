@@ -30,13 +30,13 @@ public class ClientDisconRecord extends ClientLogRecord {
 	/**
 	 * Creates a new record for the end of a successful disconnection attempt
 	 * @param client The client that attempted to disconnect
-	 * @param millis The time since the start of the disconnection attempt
+	 * @param disconStart The record for the start of the disconnection attempt
 	 */
-	public ClientDisconRecord(Client client, long millis) {
-		super(Level.FINE, client, millis, SystemEvent.CLIENT_CONNECTION, ""); 
+	public ClientDisconRecord(Client client, ClientDisconRecord disconStart) {
+		super(Level.FINE, client, SystemEvent.CLIENT_CONNECTION, "", disconStart); 
 		
 		this.setMessage(String.format("Disconnected after %d milliseconds.", 
-				this.getElapsedTime()));
+				this.getChainElapsedTime()));
 		
 		this.isDisconnectionStart = false;
 	}
@@ -45,13 +45,13 @@ public class ClientDisconRecord extends ClientLogRecord {
 	 * Creates a new record for the unsuccessful end of a disconnection attempt
 	 * @param client The client that attempted to disconnect
 	 * @param thrown The exception thrown on the disconnection attempt
-	 * @param millis The time since the start of the disconnection attempt
+	 * @param disconStart The record for the start of the disconnection attempt
 	 */
-	public ClientDisconRecord(Client client, Throwable thrown, long millis) {
-		super(Level.SEVERE, client, millis, SystemEvent.CLIENT_CONNECTION, "");				
+	public ClientDisconRecord(Client client, Throwable thrown, ClientDisconRecord disconStart) {
+		super(Level.SEVERE, client, SystemEvent.CLIENT_CONNECTION, "", disconStart);				
 		
 		this.setMessage(String.format("The disconnection failed after %d milliseconds, reason: %s", 
-				this.getElapsedTime(), thrown.getMessage()));
+				this.getChainElapsedTime(), thrown.getMessage()));
 				
 		this.isDisconnectionStart = false;
 	}

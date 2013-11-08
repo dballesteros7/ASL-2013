@@ -40,13 +40,13 @@ public class QueueCreateLogRecord extends ClientLogRecord {
 	 * Creates a new record for the end of a successful queue creation
 	 * @param client The client that attempted to create the queue
 	 * @param queueName The name of the queue that was created
-	 * @param millis The time since the start of the attempt
+	 * @param startRecord The record logging the start of the attempt
 	 */
-	public QueueCreateLogRecord(Client client, String queueName, long millis) {
-		super(Level.FINE, client, millis, SystemEvent.QUEUE_CREATION, ""); 
+	public QueueCreateLogRecord(Client client, String queueName, QueueCreateLogRecord startRecord) {
+		super(Level.FINE, client, SystemEvent.QUEUE_CREATION, "", startRecord); 
 		
 		this.setMessage(String.format("Queue %s successfully created after %d milliseconds.", 
-				queueName, this.getElapsedTime()));
+				queueName, this.getChainElapsedTime()));
 		
 		this.queueName = queueName;
 		this.isAttemptStart = false;
@@ -57,10 +57,10 @@ public class QueueCreateLogRecord extends ClientLogRecord {
 	 * @param client The client that attempted to create the queue
 	 * @param queueName The name of the queue that was to be created
 	 * @param thrown The exception thrown on the attempt
-	 * @param millis The time since the start of the attempt
+	 * @param startRecord The record logging the start of the attempt
 	 */
-	public QueueCreateLogRecord(Client client, String queueName, Throwable thrown, long millis) {
-		super(Level.WARNING, client, millis, SystemEvent.QUEUE_CREATION, "");				
+	public QueueCreateLogRecord(Client client, String queueName, Throwable thrown, QueueCreateLogRecord startRecord) {
+		super(Level.WARNING, client, SystemEvent.QUEUE_CREATION, "", startRecord);				
 		
 		/*
 		 * If the exception thrown was not one of the expected errors then
@@ -71,7 +71,7 @@ public class QueueCreateLogRecord extends ClientLogRecord {
 		}
 		
 		this.setMessage(String.format("The creation of queue %s failed after %d milliseconds, reason: %s", 
-				queueName, this.getElapsedTime(), thrown.getMessage()));
+				queueName, this.getChainElapsedTime(), thrown.getMessage()));
 				
 		this.queueName = queueName;
 		this.isAttemptStart = false;

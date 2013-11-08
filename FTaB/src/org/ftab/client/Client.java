@@ -116,24 +116,13 @@ public class Client {
 		try {
 			server.Connect(this);
 
-			LOGGER.log(new ClientConnectionRecord(this, record.getMillis()));
+			LOGGER.log(new ClientConnectionRecord(this, record));
 			return true;
-		} catch (IOException e) {
-			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
+		} catch (IOException | InvalidHeaderException | FullServerException | 
+				 AlreadyOnlineException | UnspecifiedErrorException e) {
+			LOGGER.log(new ClientConnectionRecord(this, e, record));
 			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (FullServerException e) {
-			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (AlreadyOnlineException e) {
-			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new ClientConnectionRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		}
+		} 
 		
 		return false;
 	}
@@ -154,20 +143,17 @@ public class Client {
 		try {
 			server.Disconnect(this);
 		
-			LOGGER.log(new ClientDisconRecord(this, record.getMillis()));
+			LOGGER.log(new ClientDisconRecord(this, record));
 			return true;
-		} catch (IOException e) {
-			LOGGER.log(new ClientDisconRecord(this, e, record.getMillis()));
+		} catch (IOException | UnspecifiedErrorException e) {
+			LOGGER.log(new ClientDisconRecord(this, e, record));
 			if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
-			LOGGER.log(new ClientDisconRecord(this, e, record.getMillis()));
+			LOGGER.log(new ClientDisconRecord(this, e, record));
 			if (!suppressingErrors) throw e;
 			
 			// Assume the attempt was successful
 			return true;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new ClientDisconRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
 		}
 		
 		return false;
@@ -200,26 +186,15 @@ public class Client {
 		try {
 			server.PushMessage(msg);
 			
-			LOGGER.log(new SendMsgLogRecord(this, msg, record.getMillis()));
+			LOGGER.log(new SendMsgLogRecord(this, msg, record));
 			return true;
 		
 			/* Log the failed attempt */
-		} catch (QueueInexistentException e) {
-			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
+		} catch (QueueInexistentException | ClientInexistentException | UnspecifiedErrorException 
+				| IOException | InvalidHeaderException e) {
+			LOGGER.log(new SendMsgLogRecord(this, msg, e, record));
 			if (!suppressingErrors) throw e;
-		} catch (ClientInexistentException e) {
-			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (IOException e) {
-			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new SendMsgLogRecord(this, msg, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		}
+		} 
 		
 		return false;
 	}
@@ -262,24 +237,13 @@ public class Client {
 		try {
 			server.DeleteQueue(queueName);
 			
-			LOGGER.log(new QueueDeleteLogRecord(this, queueName, record.getMillis()));
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, record));
 			return true;
-		} catch (QueueInexistentException e) {
-			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
+		} catch (QueueInexistentException | QueueNotEmptyException | UnspecifiedErrorException 
+				| IOException | InvalidHeaderException e) {
+			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record));
 			if (!suppressingErrors) throw e;
-		} catch (QueueNotEmptyException e) {
-			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (IOException e) {
-			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		}
+		} 
 		return false;
 	}
 	
@@ -301,21 +265,12 @@ public class Client {
 		try {
 			server.CreateQueue(queueName);
 			
-			LOGGER.log(new QueueCreateLogRecord(this, queueName, record.getMillis()));
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, record));
 			return true;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
+		} catch (UnspecifiedErrorException | QueueAEException | IOException | InvalidHeaderException e) {
+			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record));
 			if (!suppressingErrors) throw e;
-		} catch (QueueAEException e) {
-			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (IOException e) {
-			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		}
+		} 
 		return false;
 	}
 
@@ -335,16 +290,10 @@ public class Client {
 		try {
 			Iterable<String> result = server.GetWaitingQueues(this);
 			
-			LOGGER.log(new WaitingQueuesLogRecord(this, result, record.getMillis()));
+			LOGGER.log(new WaitingQueuesLogRecord(this, result, record));
 			return result;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new WaitingQueuesLogRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (IOException e) {
-			LOGGER.log(new WaitingQueuesLogRecord(this, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new WaitingQueuesLogRecord(this, e, record.getMillis()));
+		} catch (UnspecifiedErrorException | IOException | InvalidHeaderException e) {
+			LOGGER.log(new WaitingQueuesLogRecord(this, e, record));
 			if (!suppressingErrors) throw e;
 		}
 		
@@ -386,28 +335,20 @@ public class Client {
 			Message result = server.RetrieveMessage(queueName, Filter.QUEUE, orderedBy, andRemove);
 			
 			LOGGER.log(new GetMessageLogRecord(this, result, Filter.QUEUE, queueName, 
-					orderedBy, andRemove, record.getMillis()));
+					orderedBy, andRemove, record));
 			return result;
 		} catch (QueueInexistentException e) {
 			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
-					andRemove, e, record.getMillis()));
+					andRemove, e, record));
 			if (!suppressingErrors) throw e;
 		} catch (ClientInexistentException e) {
 			// Should never reach here
 			e.printStackTrace();
-		} catch (UnspecifiedErrorException e) {
+		} catch (UnspecifiedErrorException | IOException | InvalidHeaderException e) {
 			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
-					andRemove, e, record.getMillis()));
+					andRemove, e, record));
 			if (!suppressingErrors) throw e;
-		} catch (IOException e) {
-			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
-					andRemove, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
-					andRemove, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		}
+		} 
 		
 		return null;
 	}
@@ -448,28 +389,16 @@ public class Client {
 			Message result = server.RetrieveMessage(senderName, Filter.SENDER, orderedBy, andRemove);
 
 			LOGGER.log(new GetMessageLogRecord(this, result, Filter.SENDER, senderName, 
-					orderedBy, andRemove, record.getMillis()));
+					orderedBy, andRemove, record));
 			return result;
 		} catch (QueueInexistentException e) {
 			// Should never reach here
 			e.printStackTrace();
-		} catch (ClientInexistentException e) {
+		} catch (ClientInexistentException | UnspecifiedErrorException | IOException | InvalidHeaderException e) {
 			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
-					andRemove, e, record.getMillis()));
+					andRemove, e, record));
 			if (!suppressingErrors) throw e;
-		} catch (UnspecifiedErrorException e) {
-			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
-					andRemove, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (IOException e) {
-			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
-					andRemove, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		} catch (InvalidHeaderException e) {
-			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
-					andRemove, e, record.getMillis()));
-			if (!suppressingErrors) throw e;
-		}
+		} 
 
 		return null;
 	}

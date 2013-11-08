@@ -30,32 +30,21 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	 * The string rep of the server
 	 */
 	private final String clientServerString;
-	
-	/**
-	 * The time elapsed since the period passed as a constructor argument 
-	 */
-	private long elapsedTime;
-	
+			
 	/**
 	 * Creates a new log record from a client
 	 * @param level The level of severity of the recorrd
 	 * @param client The client that created the log record
-	 * @param millis A reference time for this event, from which its elapsed time will be calculated.
 	 * @param eventCategory The category for this event
 	 * @param msg The message for the log record
+	 * @param associatedLogRecord The record to be associated with this log record
 	 */
-	public ClientLogRecord(Level level, Client client, long millis, SystemEvent eventCategory, String msg) {
-		super(level, eventCategory, String.format("%s <-> %s | %s", client.getUsername(), client.getServer().toString(), msg));
+	public ClientLogRecord(Level level, Client client, SystemEvent eventCategory, String msg, ClientLogRecord associatedLogRecord) {
+		super(level, eventCategory, String.format("%s <-> %s | %s", client.getUsername(), client.getServer().toString(), msg), 
+				associatedLogRecord);
 		
 		this.clientUsername = client.getUsername();
 		this.clientServerString = client.getServer().toString();
-		
-		/* Log the time elapsed since a related event */
-		if (millis < 0) {
-			elapsedTime = 0;
-		} else {
-			elapsedTime = this.getMillis() - millis;
-		}
 	}
 	
 	/**
@@ -66,7 +55,7 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	 * @param msg The message for the log record
 	 */
 	public ClientLogRecord(Level level, Client client, SystemEvent eventCategory, String msg) {
-		this(level, client, -1l, eventCategory, msg);
+		this(level, client, eventCategory, msg, null);
 	}
 		
 	
@@ -82,14 +71,5 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	 */
 	public String getClientUsername() {
 		return clientUsername;
-	}
-	
-	/**
-	 * Gets the time elapsed since another related event.
-	 * @return The time between this event and the time passed during
-	 * construction.
-	 */
-	public long getElapsedTime() {
-		return elapsedTime;
 	}
 }

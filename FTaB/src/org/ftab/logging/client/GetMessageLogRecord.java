@@ -77,13 +77,14 @@ public class GetMessageLogRecord extends ClientLogRecord {
 	 * @param value The value of the filter that was being used
 	 * @param order The order that was being prioritized
 	 * @param andDelete Whether the message was to be deleted after being retrieved
-	 * @param millis The time of the start of the attempt
+	 * @param requestStart The record that logged the start of the attempt
 	 */
-	public GetMessageLogRecord(Client client, Message msg, Filter filter, String value, Order order, boolean andDelete, long millis) {
-		super(Level.FINE, client, millis, SystemEvent.RETRIEVE_MESSAGE, ""); 
+	public GetMessageLogRecord(Client client, Message msg, Filter filter, String value, Order order, 
+			boolean andDelete, GetMessageLogRecord requestStart) {
+		super(Level.FINE, client, SystemEvent.RETRIEVE_MESSAGE, "", requestStart); 
 		
 		this.setMessage(String.format("%s successfully %s after %d milliseconds.", 
-				msg != null ? msg.getSummary() : "There was no message to be", andDelete ? "POPPED" : "PEEKED", this.getElapsedTime()));
+				msg != null ? msg.getSummary() : "There was no message to be", andDelete ? "POPPED" : "PEEKED", this.getChainElapsedTime()));
 		
 		this.value = value;
 		this.filterBy = filter;
@@ -102,10 +103,11 @@ public class GetMessageLogRecord extends ClientLogRecord {
 	 * @param order The order that was being prioritized
 	 * @param andDelete Whether the message was to be deleted after being retrieved
 	 * @param thrown The exception that was thrown in the attempt
-	 * @param millis The time of the start of the attempt
+	 * @param requestStart The record that logged the start of the attempt
 	 */
-	public GetMessageLogRecord(Client client, Filter filter, String value, Order order, boolean andDelete, Throwable thrown, long millis) {
-		super(Level.WARNING, client, millis, SystemEvent.RETRIEVE_MESSAGE, "");				
+	public GetMessageLogRecord(Client client, Filter filter, String value, Order order, boolean andDelete, 
+			Throwable thrown, GetMessageLogRecord requestStart) {
+		super(Level.WARNING, client, SystemEvent.RETRIEVE_MESSAGE, "", requestStart);				
 		
 		/*
 		 * If the exception thrown was not one of the expected errors then
@@ -117,7 +119,7 @@ public class GetMessageLogRecord extends ClientLogRecord {
 		}
 		
 		this.setMessage(String.format("The retrieval of the message failed after %d milliseconds, reason: %s", 
-				this.getElapsedTime(), thrown.getMessage()));
+				this.getChainElapsedTime(), thrown.getMessage()));
 				
 		this.value = value;
 		this.filterBy = filter;

@@ -32,13 +32,13 @@ public class ClientConnectionRecord extends ClientLogRecord {
 	/**
 	 * Creates a new record for the end of a successful connection attempt
 	 * @param client The client that attempted to connect
-	 * @param millis The time since the start of the connection attempt
+	 * @param startRecord The record of the the start of the connection attempt
 	 */
-	public ClientConnectionRecord(Client client, long millis) {
-		super(Level.FINE, client, millis, SystemEvent.CLIENT_CONNECTION, ""); 
+	public ClientConnectionRecord(Client client, ClientConnectionRecord startRecord) {
+		super(Level.FINE, client, SystemEvent.CLIENT_CONNECTION, "", startRecord); 
 		
 		this.setMessage(String.format("Connected after %d milliseconds.", 
-				this.getElapsedTime()));
+				this.getChainElapsedTime()));
 		
 		this.isConnectionStart = false;
 	}
@@ -47,10 +47,10 @@ public class ClientConnectionRecord extends ClientLogRecord {
 	 * Creates a new record for the unsuccessful end of a connection attempt
 	 * @param client The client that attempted to connect
 	 * @param thrown The exception thrown on the connection attempt
-	 * @param millis The time since the start of the connection attempt
+	 * @param startRecord The record of the the start of the connection attempt
 	 */
-	public ClientConnectionRecord(Client client, Throwable thrown, long millis) {
-		super(Level.WARNING, client, millis, SystemEvent.CLIENT_CONNECTION, "");				
+	public ClientConnectionRecord(Client client, Throwable thrown, ClientConnectionRecord startRecord) {
+		super(Level.WARNING, client, SystemEvent.CLIENT_CONNECTION, "", startRecord);				
 		
 		/*
 		 * If the exception thrown was not one of the expected errors then
@@ -62,7 +62,7 @@ public class ClientConnectionRecord extends ClientLogRecord {
 		}
 		
 		this.setMessage(String.format("The connection attempt failed after %d milliseconds, reason: %s", 
-				this.getElapsedTime(), thrown.getMessage()));
+				this.getChainElapsedTime(), thrown.getMessage()));
 				
 		this.isConnectionStart = false;
 	}
