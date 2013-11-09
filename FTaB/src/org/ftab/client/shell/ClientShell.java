@@ -16,7 +16,7 @@ import org.ftab.client.exceptions.FullServerException;
 import org.ftab.client.exceptions.UnspecifiedErrorException;
 import org.ftab.communication.exceptions.InvalidHeaderException;
 import org.ftab.logging.client.ClientLogger;
-import org.ftab.logging.client.formatters.MessageOnlyFormatter;
+import org.ftab.logging.formatters.MessageOnlyFormatter;
 
 /**
  * Shell interface for the client

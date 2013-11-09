@@ -29,6 +29,21 @@ public enum SystemEvent {
 	/**
 	 * Event of the client retrieving a message
 	 */
-	RETRIEVE_MESSAGE
+	RETRIEVE_MESSAGE,
 	
+	/**
+	 * Generic system event such as configuration
+	 */
+	SYSTEM_GENERIC,
+	
+	/**
+	 * Events occurring in the channel IO layer
+	 */
+	CHANNEL_IO,
+	
+	/**
+	 * Events occurring when working with the buffers of 
+	 * the client connection
+	 */
+	BUFFER_IO
 }

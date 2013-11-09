@@ -223,7 +223,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
         String serialized = messageId + SEPARATOR + escapedMessage + SEPARATOR
                 + escapedSender + SEPARATOR + escapedReceiver + SEPARATOR
                 + escapedQueue + SEPARATOR + priority + SEPARATOR
-                + context.toString();
+                + context.name();
         Charset encoder = Charset.forName(CHARSET);
         ByteBuffer bb = encoder.encode(serialized);
         return bb;

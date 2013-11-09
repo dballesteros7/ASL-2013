@@ -1,4 +1,4 @@
-package org.ftab.logging.client.formatters;
+package org.ftab.logging.formatters;
 
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;

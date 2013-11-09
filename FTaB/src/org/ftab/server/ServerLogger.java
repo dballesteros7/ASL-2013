@@ -5,6 +5,7 @@
  */
 package org.ftab.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.text.SimpleDateFormat;
@@ -16,6 +17,10 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import org.ftab.logging.formatters.MessageOnlyFormatter;
+import org.ftab.logging.server.filters.SrvEmptyRetrieveFilter;
+import org.ftab.logging.server.filters.SrvSendRetFilter;
+import org.ftab.logging.server.formatters.ServerCCDetailRTFormatter;
 import org.ftab.server.exceptions.ConfigurationErrorException;
 
 /**
@@ -82,15 +87,41 @@ public class ServerLogger extends Formatter {
 
         // Create a fileHandler pointing to the given file, the path is expected
         // to be a pattern for log rotation.
-        FileHandler log = new FileHandler(logOutput, 1024 * 1024 * 1024, 10);
+        //FileHandler log = new FileHandler(logOutput, 1024 * 1024 * 1024, 10);
 
         // Create a simple formatter and add the handler to the global logger
-        ServerLogger logFormatter = new ServerLogger();
-        log.setFormatter(logFormatter);
+        //ServerLogger logFormatter = new ServerLogger();
+        //log.setFormatter(logFormatter);
         for (Handler handler : logger.getHandlers()) {
             logger.removeHandler(handler);
         }
-        logger.addHandler(log);
+        //logger.addHandler(log);
+        
+        
+        
+        
+        File file = new File(logOutput);
+        File RTTFile = new File(file.getParent(), "rtt%g.log");
+        File errorLog = new File(file.getParent(), "errorLog%g.log");
+        File emptyRetrieveFile = new File(file.getParent(), "emptyret%g.log");
+        
+        FileHandler errorLogHandler = new FileHandler(errorLog.getAbsolutePath(), 1024 * 1024 * 1024, 10);
+        errorLogHandler.setLevel(Level.WARNING);
+        errorLogHandler.setFormatter(new MessageOnlyFormatter());
+        
+        logger.addHandler(errorLogHandler);
+        
+        FileHandler rttHandler = new FileHandler(RTTFile.getAbsolutePath(), 1024 * 1024 * 1024, 10);
+        rttHandler.setFormatter(new ServerCCDetailRTFormatter());
+        rttHandler.setFilter(new SrvSendRetFilter());
+        
+        logger.addHandler(rttHandler);
+        
+        FileHandler emptyRetrHandler = new FileHandler(emptyRetrieveFile.getAbsolutePath(), 1024 * 1024 * 1024, 10);
+        emptyRetrHandler.setFormatter(new ServerCCDetailRTFormatter());
+        emptyRetrHandler.setFilter(new SrvEmptyRetrieveFilter());
+        
+        logger.addHandler(emptyRetrHandler);
     }
 
     /**
@@ -135,7 +166,7 @@ public class ServerLogger extends Formatter {
      *            miliseconds since epoch.
      * @return readable string for the data represented by milisecs.
      */
-    private String calcDate(long millisecs) {
+    public static String calcDate(long millisecs) {
         SimpleDateFormat date_format = new SimpleDateFormat(
                 "MM-dd HH:mm:ss.SSS");
         Date resultdate = new Date(millisecs);

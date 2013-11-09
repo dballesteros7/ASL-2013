@@ -83,4 +83,16 @@ public abstract class SystemLogRecord extends LogRecord {
 					+ this.getAssociatedRecord().getChainElapsedTime();
 		}
 	}
+	
+	/**
+	 * Gets the first record in this log record chain
+	 * @return The first record or this record if it is the first
+	 */
+	public SystemLogRecord getFirstRecord() {
+		if (this.getAssociatedRecord() == null) {
+			return this;
+		} else {
+			return this.getAssociatedRecord().getFirstRecord();
+		}
+	}
 }

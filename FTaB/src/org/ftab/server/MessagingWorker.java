@@ -12,9 +12,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.ftab.logging.server.WorkerLogRecord;
 import org.ftab.server.ClientConnection.WriteStatus;
 import org.ftab.server.exceptions.RemoteSocketClosedException;
 
@@ -29,6 +29,16 @@ public class MessagingWorker implements Runnable {
     private final static Logger LOGGER = Logger.getLogger(MessagingWorker.class
             .getName());
 
+    /**
+     * Used to generate unique IDs for the messaging workers
+     */
+    private static int uniqueID = 0;
+    
+    /**
+     * User friendly identifier for the worker
+     */
+    private final String workerTag;
+    
     /**
      * Selector for demuxing the channels.
      */
@@ -57,7 +67,7 @@ public class MessagingWorker implements Runnable {
      * Indicates if the worker is running.
      */
     private volatile boolean active;
-
+    
     /**
      * Max time that a channel is allowed to be inactive (i.e. no read/write
      * event has been selected), in seconds.
@@ -74,7 +84,8 @@ public class MessagingWorker implements Runnable {
      * @throws IOException
      *             If there is a problem opening the selector.
      */
-    public MessagingWorker(int nCapacity, DBConnectionDispatcher nDispatcher)
+    public MessagingWorker(int nCapacity, DBConnectionDispatcher nDispatcher, 
+    		String serverTag)
             throws IOException {
         selector = Selector.open();
         capacity = nCapacity;
@@ -84,6 +95,7 @@ public class MessagingWorker implements Runnable {
         active = false;
         keepRunning = true;
         clientTimeout = 3600;
+        workerTag = String.format("worker#%d@%s", uniqueID++, serverTag);
     }
 
     /**
@@ -159,9 +171,8 @@ public class MessagingWorker implements Runnable {
                 key = channel.register(selector, SelectionKey.OP_READ);
                 key.attach(new ClientConnection(dispatcher));
             } catch (ClosedChannelException e) {
-                LOGGER.severe("Couldn't register new channel in worker " +
-                        identifier + " because it was already closed.");
-                LOGGER.log(Level.SEVERE, "", e);
+            	LOGGER.log(new WorkerLogRecord(this,  
+            			"Couldn't register new channel in worker because it was already closed.", e));
             }
         }
     }
@@ -176,9 +187,10 @@ public class MessagingWorker implements Runnable {
         synchronized (guardlock) {
             selector.wakeup();
             key.cancel();
-            LOGGER.info("Canceled key for connection from " +
-                    ServerLogger.parseSocketAddress((SocketChannel) key
-                            .channel()) + ".");
+            
+            LOGGER.log(new WorkerLogRecord(this, 
+        			String.format("Canceled key for connection from %s.", 
+        					ServerLogger.parseSocketAddress((SocketChannel)key.channel()))));
         }
     }
 
@@ -194,9 +206,10 @@ public class MessagingWorker implements Runnable {
         synchronized (guardlock) {
             selector.wakeup();
             key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
-            LOGGER.info("Channel connected to " +
-                    ServerLogger.parseSocketAddress((SocketChannel) key
-                            .channel()) + " is now interested in writing.");
+            
+            LOGGER.log(new WorkerLogRecord(this,  
+        			String.format("Channel connected to %s is now interested in writing.", 
+        					ServerLogger.parseSocketAddress((SocketChannel)key.channel()))));
         }
     }
 
@@ -212,9 +225,10 @@ public class MessagingWorker implements Runnable {
         synchronized (guardlock) {
             selector.wakeup();
             key.interestOps(SelectionKey.OP_READ);
-            LOGGER.info("Channel connected to " +
-                    ServerLogger.parseSocketAddress((SocketChannel) key
-                            .channel()) + " is now only interested in reading.");
+            
+            LOGGER.log(new WorkerLogRecord(this, 
+            		String.format("Channel connected to %s is now only interested in reading.", 
+        					ServerLogger.parseSocketAddress((SocketChannel)key.channel()))));
         }
     }
 
@@ -247,9 +261,8 @@ public class MessagingWorker implements Runnable {
                     }
                 }
             } catch (IOException e) {
-                LOGGER.severe("Failed to select anything in worker " +
-                        identifier + ".");
-                LOGGER.log(Level.SEVERE, "", e);
+            	LOGGER.log(new WorkerLogRecord(this, 
+            			String.format("Failed to select anything in worker %s.", identifier), e));
             }
         }
         closeWorker();
@@ -261,7 +274,10 @@ public class MessagingWorker implements Runnable {
      * other thread is touching the selector or the channels.
      */
     private void closeWorker() {
-        LOGGER.info("Shutting down worker " + identifier + ".");
+    	final WorkerLogRecord record = 
+    			new WorkerLogRecord(this, String.format("Shutting down worker %s.", identifier));
+    	LOGGER.log(record);
+        
         try {
             for (SelectionKey key : selector.keys()) {
                 SocketChannel sc = (SocketChannel) key.channel();
@@ -269,9 +285,9 @@ public class MessagingWorker implements Runnable {
             }
             selector.close();
         } catch (IOException e) {
-            LOGGER.severe("Failed to close channels and selector in worker " +
-                    identifier + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new WorkerLogRecord(this, 
+        			String.format("Failed to close channels and selector in worker %s.", identifier), 
+        			record, e));
         }
     }
 
@@ -287,11 +303,14 @@ public class MessagingWorker implements Runnable {
     private void processReadReady(SelectionKey key) {
         SocketChannel sc = (SocketChannel) key.channel();
         ClientConnection cc = (ClientConnection) key.attachment();
+        
+        final WorkerLogRecord record = new WorkerLogRecord(this, 
+        		String.format("Processing read event from %s.", ServerLogger.parseSocketAddress(sc)));
+        LOGGER.log(record);
+        
         try {
             boolean needWrite = false;
             try {
-                LOGGER.config("Processing read event from " +
-                        ServerLogger.parseSocketAddress(sc) + ".");
                 needWrite = cc.processRead(sc);
             } catch (RemoteSocketClosedException e) {
                 sc.close();
@@ -300,9 +319,9 @@ public class MessagingWorker implements Runnable {
             if (needWrite && ((key.interestOps() & SelectionKey.OP_WRITE) == 0))
                 announceWriteNeed(key);
         } catch (IOException e) {
-            LOGGER.severe("Failed to process a read event from " +
-                    ServerLogger.parseSocketAddress(sc) + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new WorkerLogRecord(this, 
+        			String.format("Failed to process a read event from %s.", 
+        					ServerLogger.parseSocketAddress(sc)), record, e));
         }
     }
 
@@ -318,9 +337,12 @@ public class MessagingWorker implements Runnable {
     private void processWriteReady(SelectionKey key) {
         SocketChannel sc = (SocketChannel) key.channel();
         ClientConnection cc = (ClientConnection) key.attachment();
+        
+        final WorkerLogRecord record = new WorkerLogRecord(this, 
+        		String.format("Processing write event from %s.", ServerLogger.parseSocketAddress(sc)));
+        LOGGER.log(record);
+        
         try {
-            LOGGER.config("Processing write event from " +
-                    ServerLogger.parseSocketAddress(sc) + ".");
             WriteStatus ccs = cc.processWrite(sc);
             switch (ccs) {
             case IDLE:
@@ -334,9 +356,17 @@ public class MessagingWorker implements Runnable {
                 break;
             }
         } catch (IOException e) {
-            LOGGER.severe("Failed to process a write event from " +
-                    ServerLogger.parseSocketAddress(sc) + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new WorkerLogRecord(this, 
+        			String.format("Failed to process a write event from %s.", 
+        					ServerLogger.parseSocketAddress(sc)), record, e));
         }
     }
+    
+    /**
+     * Gets the user-friendly tag associated with this worker
+     * @return The user-friendly tag associated with this worker
+     */
+    public String getWorkerTag() {
+		return workerTag;
+	}
 }

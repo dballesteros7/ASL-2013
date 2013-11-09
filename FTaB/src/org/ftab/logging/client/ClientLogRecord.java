@@ -20,7 +20,7 @@ import org.ftab.logging.SystemLogRecord;
  * @author Jean-Pierre
  */
 @SuppressWarnings("serial")
-abstract class ClientLogRecord extends SystemLogRecord {
+public abstract class ClientLogRecord extends SystemLogRecord {
 	/**
 	 * The username of the client
 	 */
@@ -31,6 +31,8 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	 */
 	private final String clientServerString;
 			
+	private final static String messageStringFormat = "%s <-> %s | %s";
+	
 	/**
 	 * Creates a new log record from a client
 	 * @param level The level of severity of the recorrd
@@ -40,7 +42,7 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	 * @param associatedLogRecord The record to be associated with this log record
 	 */
 	public ClientLogRecord(Level level, Client client, SystemEvent eventCategory, String msg, ClientLogRecord associatedLogRecord) {
-		super(level, eventCategory, String.format("%s <-> %s | %s", client.getUsername(), client.getServer().toString(), msg), 
+		super(level, eventCategory, String.format(messageStringFormat, client.getUsername(), client.getServer().toString(), msg), 
 				associatedLogRecord);
 		
 		this.clientUsername = client.getUsername();
@@ -57,11 +59,10 @@ abstract class ClientLogRecord extends SystemLogRecord {
 	public ClientLogRecord(Level level, Client client, SystemEvent eventCategory, String msg) {
 		this(level, client, eventCategory, msg, null);
 	}
-		
 	
 	@Override
 	public void setMessage(String message) {
-		super.setMessage(String.format("%s <-> %s | %s", 
+		super.setMessage(String.format(messageStringFormat, 
 				clientUsername, clientServerString, message));
 	}
 	

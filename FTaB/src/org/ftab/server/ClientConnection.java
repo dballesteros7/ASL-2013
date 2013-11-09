@@ -41,6 +41,8 @@ import org.ftab.database.message.RetrieveMessage;
 import org.ftab.database.queue.CreateQueue;
 import org.ftab.database.queue.DeleteQueue;
 import org.ftab.database.queue.GetQueuesWithMessages;
+import org.ftab.logging.SystemEvent;
+import org.ftab.logging.server.ClientConnectionLogRecord;
 import org.ftab.pubenums.Filter;
 import org.ftab.pubenums.Order;
 import org.ftab.server.exceptions.RemoteSocketClosedException;
@@ -142,20 +144,27 @@ public class ClientConnection {
      */
     public boolean processRead(SocketChannel sc) throws IOException,
             RemoteSocketClosedException {
-        if (disconnectionRequested) {
+        final String socketAddresss = ServerLogger.parseSocketAddress(sc);
+    	
+    	
+    	if (disconnectionRequested) {
             // Block the reads if a disconnect was requested, let the outbound
             // buffer clear itself.
-            LOGGER.warning("Client " + ServerLogger.parseSocketAddress(sc) +
+        	LOGGER.log(new ClientConnectionLogRecord(Level.WARNING, socketAddresss, 
+        			SystemEvent.CLIENT_CONNECTION, "Client " + socketAddresss +
                     " attempted to perform additional operations after " +
-                    "requesting a disconnect.");
+                    "requesting a disconnect."));
             return true;
         }
+        
         switch (readingStatus) {
         case READING_HEADER:
             int r = sc.read(headerBuffer);
             if (r < 0) {
-                LOGGER.severe("Socket was closed unexpectedly by " +
-                        ServerLogger.parseSocketAddress(sc));
+            	LOGGER.log(new ClientConnectionLogRecord(Level.SEVERE, socketAddresss,
+            			SystemEvent.BUFFER_IO, "Socket was closed unexpectedly by " +
+                        socketAddresss));
+            	
                 throw new RemoteSocketClosedException();
             }
             if (!headerBuffer.hasRemaining()) {
@@ -164,16 +173,18 @@ public class ClientConnection {
                     int bodyLength = processHeader();
                     readingStatus = ReadStatus.READING_BODY;
                     bodyBuffer = ByteBuffer.allocate(bodyLength);
-                    LOGGER.config("Finished reading header for new request from " +
-                            ServerLogger.parseSocketAddress(sc) +
-                            ", expecting now " +
-                            bodyLength +
-                            " bytes for the body.");
+                    
+                    LOGGER.log(new ClientConnectionLogRecord(socketAddresss, 
+                    		SystemEvent.BUFFER_IO, 
+                    		String.format("Finished reading header for new request" +
+                    		" from %s expecting now %d bytes for the body", 
+                    		socketAddresss, bodyLength)));
+                    
                 } catch (InvalidHeaderException e) {
-                    LOGGER.severe("Received an invalid header from " +
-                            ServerLogger.parseSocketAddress(sc) +
-                            " , ignoring it and awaiting a new one.");
-                    LOGGER.log(Level.SEVERE, "", e);
+                	LOGGER.log(new ClientConnectionLogRecord(socketAddresss, SystemEvent.BUFFER_IO, 
+                			"Received an invalid header from " + socketAddresss +
+                            " , ignoring it and awaiting a new one.", e));
+                	
                     headerBuffer.clear();
                 }
             }
@@ -181,8 +192,9 @@ public class ClientConnection {
         case READING_BODY:
             int k = sc.read(bodyBuffer);
             if (k < 0) {
-                LOGGER.severe("Socket was closed unexpectedly by " +
-                        ServerLogger.parseSocketAddress(sc));
+            	LOGGER.log(new ClientConnectionLogRecord(Level.SEVERE, socketAddresss, 
+            			SystemEvent.BUFFER_IO, "Socket was closed unexpectedly by " +
+                        socketAddresss));
                 throw new RemoteSocketClosedException();
             }
             if (!bodyBuffer.hasRemaining()) {
@@ -211,23 +223,31 @@ public class ClientConnection {
      *             if there is an error writing to the socket.
      */
     public WriteStatus processWrite(SocketChannel sc) throws IOException {
-        if (writeBuffer.size() == 0 && disconnectionRequested) {
-            LOGGER.config("There are no more responses in the queue and a " +
+        final String socketAddress = ServerLogger.parseSocketAddress(sc);
+    	
+    	if (writeBuffer.size() == 0 && disconnectionRequested) {
+        	LOGGER.log(new ClientConnectionLogRecord(socketAddress, SystemEvent.BUFFER_IO, 
+        			"There are no more responses in the queue and a " +
                     "disconnect was requested, changing the writing " +
-                    "status for " + ServerLogger.parseSocketAddress(sc) + ".");
+                    "status for " +  socketAddress + "."));
+        	
             return WriteStatus.DISCONNECT;
         }
         if (writeBuffer.size() == 0 && !disconnectionRequested) {
-            LOGGER.config("Finished writing the queued responses for " +
-                    ServerLogger.parseSocketAddress(sc) + ".");
+        	LOGGER.log(new ClientConnectionLogRecord(socketAddress, SystemEvent.BUFFER_IO, 
+        			"Finished writing the queued responses for " +
+                    socketAddress + "."));
+            
             return WriteStatus.IDLE;
         }
         ByteBuffer toWrite = writeBuffer.peek();
         sc.write(toWrite);
         if (!toWrite.hasRemaining()) {
             writeBuffer.pop();
-            LOGGER.config("Finished sending a responses to " +
-                    ServerLogger.parseSocketAddress(sc) + ".");
+            
+        	LOGGER.log(new ClientConnectionLogRecord(socketAddress, SystemEvent.BUFFER_IO, 
+        			"Finished sending a responses to " +
+                    socketAddress + "."));
         }
         return WriteStatus.WRITING;
     }
@@ -285,8 +305,10 @@ public class ClientConnection {
                 } else {
                     // No need to tell the client that he is doing something
                     // which has no effect.
-                    LOGGER.config("Received connection request from " +
-                            address + " but user is already connected.");
+                    LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION,
+                    		"Received connection request from " +
+                            address + " but user is already connected."));
+                    
                     RequestResponse errorResponse = new RequestResponse(
                             Status.SUCCESS);
                     nextResponseBuffer = ProtocolMessage.toBytes(errorResponse);
@@ -313,8 +335,10 @@ public class ClientConnection {
                 nextResponseBuffer = getQueues(address);
                 break;
             default:
-                LOGGER.severe("Received an invalid action request from " +
-                        address);
+            	LOGGER.log(new ClientConnectionLogRecord(Level.SEVERE, address, SystemEvent.BUFFER_IO, 
+            			"Received an invalid action request from " +
+                        address));
+            	
                 RequestResponse errorResponse = new RequestResponse(
                         Status.EXCEPTION, "Unexpected message type received.");
                 nextResponseBuffer = ProtocolMessage.toBytes(errorResponse);
@@ -343,8 +367,11 @@ public class ClientConnection {
      * @return buffer with the response to the request.
      */
     private ByteBuffer connectClient(String username, String address) {
-        LOGGER.info("Received connection request from " + address +
+    	ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, 
+    			SystemEvent.CLIENT_CONNECTION, "Received connection request from " + address +
                 " for client " + username + ".");
+    	LOGGER.log(record);
+    	
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
@@ -352,16 +379,21 @@ public class ClientConnection {
             if (tmpClient == null) {
                 int clientId = CreateClient.execute(username, true, conn);
                 client = new Client(clientId, username, true);
-                LOGGER.config("Created client " + username +
-                        " in the database.");
+                
+                record = new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION, 
+                		"Created client " + username + " in the database.", record);
+                LOGGER.log(record);
             } else {
                 if (tmpClient.isClientOnline()) {
                     RequestResponse failureResponse = new RequestResponse(
                             Status.USER_ONLINE);
-                    LOGGER.info("Responded to connection request from " +
-                            address +
+                    
+                    record = new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION, 
+                    		"Responded to connection request from " + address +
                             " with failure since the specified client " +
-                            "is already online.");
+                            "is already online.", record); 
+                    LOGGER.log(record);
+                    
                     return ProtocolMessage.toBytes(failureResponse);
                 } else {
                     client = tmpClient;
@@ -369,16 +401,21 @@ public class ClientConnection {
                 }
             }
             connected = true;
-            LOGGER.info("Connected client " + username +
-                    " successfully, request originated from " + address + ".");
+            
+            record = new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION, 
+            		"Connected client " + username + " successfully, request originated from " 
+            				+ address + ".", record);
+            LOGGER.log(record);
+            
             conn.commit();
             RequestResponse successResponse = new RequestResponse(
                     Status.SUCCESS);
             return ProtocolMessage.toBytes(successResponse);
         } catch (SQLException e) {
-            LOGGER.severe("Caught exception while trying to connect client from " +
-                    address + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+            LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION,
+            		"Caught exception while trying to connect client from " + address + ".", 
+            		record, e));
+            
             RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
@@ -411,8 +448,11 @@ public class ClientConnection {
      * @return buffer with the response to the request.
      */
     private ByteBuffer disconnectClient(String address) {
-        LOGGER.info("Received disconnection request from " + address +
+        ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION, 
+        		"Received disconnection request from " + address +
                 " for client " + client.getClientUsername() + ".");
+        LOGGER.log(record);
+        
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
@@ -420,17 +460,21 @@ public class ClientConnection {
             disconnectionRequested = true;
             connected = false;
             conn.commit();
-            LOGGER.info("Succesfully disconnected client " +
+            
+            LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION, 
+            		"Succesfully disconnected client " +
                     client.getClientUsername() + " connected from " + address +
-                    ".");
+                    ".", record));
+            
             RequestResponse successResponse = new RequestResponse(
                     Status.SUCCESS);
             return ProtocolMessage.toBytes(successResponse);
         } catch (SQLException e) {
-            LOGGER.severe("Caught exception while trying to disconnect " +
-                    "client from " + address + ".");
-            LOGGER.log(Level.SEVERE, "", e);
-            RequestResponse errorResponse = new RequestResponse(
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.CLIENT_CONNECTION, 
+            		"Caught exception while trying to disconnect " +
+                    "client from " + address + ".", record, e));
+        	
+        	RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
                 try {
@@ -460,21 +504,29 @@ public class ClientConnection {
      * @return the buffer with the response.
      */
     private ByteBuffer createQueue(String queueName, String address) {
-        LOGGER.info("Received request to create queue " + queueName + " from " +
-                address + ".");
+    	ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, 
+    			SystemEvent.QUEUE_CREATION, "Received request to create queue " + queueName 
+    			+ " from " + address + ".");
+    	LOGGER.log(record);
+    	
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
             CreateQueue.execute(queueName, conn);
             conn.commit();
-            LOGGER.info("Queue " + queueName + " created for " + address + ".");
+            
+            record = new ClientConnectionLogRecord(address, SystemEvent.QUEUE_CREATION, 
+            		"Queue " + queueName + " created for " + address + ".", record);
+            LOGGER.log(record);
+            
             RequestResponse successResponse = new RequestResponse(
                     Status.SUCCESS);
             return ProtocolMessage.toBytes(successResponse);
         } catch (SQLException e) {
-            LOGGER.severe("Caught exception while trying to create queue " +
-                    "for " + address + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new ClientConnectionLogRecord(address, 
+        			SystemEvent.QUEUE_CREATION, "Caught exception while trying to create queue " +
+                    "for " + address + ".", record, e));
+        	
             RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
@@ -485,9 +537,11 @@ public class ClientConnection {
                 }
             return ProtocolMessage.toBytes(errorResponse);
         } catch (QueueAlreadyExistsException e) {
-            LOGGER.info("Responded with failure to create queue request from " +
-                    address + " because queue " + queueName +
-                    " already exists.");
+            LOGGER.log(new ClientConnectionLogRecord(address, 
+    			SystemEvent.QUEUE_CREATION, "Responded with failure to create queue request from " +
+                    address + " because queue " + queueName + " already exists.",
+                    record));
+            
             RequestResponse failureResponse = new RequestResponse(
                     Status.QUEUE_EXISTS);
             if (conn != null)
@@ -519,22 +573,29 @@ public class ClientConnection {
      */
 
     private ByteBuffer deleteQueue(String queueName, String address) {
-        LOGGER.info("Received request to delete queue " + queueName + " from " +
+        ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, SystemEvent.QUEUE_DELETION,
+        		"Received request to delete queue " + queueName + " from " +
                 address + ".");
+        LOGGER.log(record);
+        
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
             DeleteQueue.execute(queueName, conn);
             conn.commit();
-            LOGGER.info("Queue " + queueName + " deleted for " + address + ".");
+            
+            LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.QUEUE_DELETION,
+            		"Queue " + queueName + " deleted for " + address + ".", record));
+            
             RequestResponse successResponse = new RequestResponse(
                     Status.SUCCESS);
             return ProtocolMessage.toBytes(successResponse);
         } catch (SQLException e) {
-            LOGGER.severe("Caught exception while trying to create queue " +
-                    "for " + address + ".");
-            LOGGER.log(Level.SEVERE, "", e);
-            RequestResponse errorResponse = new RequestResponse(
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.QUEUE_DELETION,
+            		"Caught exception while trying to create queue " + "for " + address + ".",
+            		record, e));
+        	
+        	RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
                 try {
@@ -544,9 +605,11 @@ public class ClientConnection {
                 }
             return ProtocolMessage.toBytes(errorResponse);
         } catch (QueueNotEmptyException e) {
-            LOGGER.info("Responded with failure to delete queue request from " +
-                    address + " because queue " + queueName + " is not empty.");
-            RequestResponse failureResponse = new RequestResponse(
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.QUEUE_DELETION,
+            		"Responded with failure to delete queue request from " +
+                    address + " because queue " + queueName + " is not empty.", record));
+            
+        	RequestResponse failureResponse = new RequestResponse(
                     Status.QUEUE_NOT_EMPTY);
             if (conn != null)
                 try {
@@ -556,9 +619,11 @@ public class ClientConnection {
                 }
             return ProtocolMessage.toBytes(failureResponse);
         } catch (InexistentQueueException e) {
-            LOGGER.info("Responded with failure to delete queue request from " +
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.QUEUE_DELETION,
+            		"Responded with failure to delete queue request from " +
                     address + " because queue " + queueName +
-                    " does not exist.");
+                    " does not exist.", record));
+            
             RequestResponse failureResponse = new RequestResponse(
                     Status.QUEUE_NOT_EXISTS);
             if (conn != null)
@@ -594,9 +659,13 @@ public class ClientConnection {
         for (@SuppressWarnings("unused")
         String x : sendMessageRequest.getQueueList())
             ++queueListSize;
-        LOGGER.info("Received request to create a message of " +
+        //TODO: P1
+        ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, SystemEvent.SEND_MESSAGE,
+        		"Received request to create a message of " +
                 sendMessageRequest.getMessage().length() + " chars, sent to " +
                 queueListSize + " queues from " + address + ".");
+        LOGGER.log(record);
+        
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
@@ -615,17 +684,21 @@ public class ClientConnection {
                                 .getMessage(), conn);
             }
             conn.commit();
-            LOGGER.info("Created message message of " +
+            
+            LOGGER.log(new ClientConnectionLogRecord(Level.INFO, address, SystemEvent.SEND_MESSAGE, 
+            		"Created message message of " +
                     sendMessageRequest.getMessage().length() +
                     " chars, sent to " + queueListSize + " queues from " +
-                    address + ".");
+                    address + ".", record));
+            //TODO:P2
             RequestResponse successResponse = new RequestResponse(
                     Status.SUCCESS);
             return ProtocolMessage.toBytes(successResponse);
         } catch (SQLException e) {
-            LOGGER.severe("Caught exception while trying to send message from " +
-                    address + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.SEND_MESSAGE, 
+        			"Caught exception while trying to send message from " +
+                    address + ".", record, e));
+        	
             RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
@@ -636,8 +709,10 @@ public class ClientConnection {
                 }
             return ProtocolMessage.toBytes(errorResponse);
         } catch (InexistentQueueException e) {
-            LOGGER.info("Responded with failure to a send message request from " +
-                    address + " because a queue does not exist.");
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.SEND_MESSAGE, 
+        			"Responded with failure to a send message request from " +
+                    address + " because a queue does not exist.", record));
+            
             RequestResponse failureResponse = new RequestResponse(
                     Status.QUEUE_NOT_EXISTS);
             if (conn != null)
@@ -648,8 +723,10 @@ public class ClientConnection {
                 }
             return ProtocolMessage.toBytes(failureResponse);
         } catch (CreateMessageException e) {
-            LOGGER.severe("Responded with failure to a send message request from " +
-                    address + " because of unknown circumstances");
+        	LOGGER.log(new ClientConnectionLogRecord(Level.SEVERE, address, SystemEvent.SEND_MESSAGE, 
+        			"Responded with failure to a send message request from " +
+                    address + " because of unknown circumstances", record));
+            
             RequestResponse failureResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
@@ -660,8 +737,10 @@ public class ClientConnection {
                 }
             return ProtocolMessage.toBytes(failureResponse);
         } catch (InexistentClientException e) {
-            LOGGER.info("Responded with failure to a send message request from " +
-                    address + " because the receiver does not exist.");
+        	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.SEND_MESSAGE, 
+        			"Responded with failure to a send message request from " +
+                    address + " because the receiver does not exist.", record));
+        	
             RequestResponse failureResponse = new RequestResponse(
                     Status.NO_CLIENT);
             if (conn != null)
@@ -693,11 +772,16 @@ public class ClientConnection {
      */
     private ByteBuffer retrieveMessage(
             RetrieveMessageRequest retrieveMessageRequest, String address) {
-        LOGGER.info("Received request to retrieve a message by " +
+    	//TODO: P1
+    	ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, SystemEvent.RETRIEVE_MESSAGE,
+    			"Received request to retrieve a message by " +
                 retrieveMessageRequest.getFilterType().toString() +
                 " ordered by " +
                 retrieveMessageRequest.getOrderBy().toString() + " from " +
                 address + ".");
+    	LOGGER.log(record);
+    	
+    	
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
@@ -709,22 +793,34 @@ public class ClientConnection {
                     conn);
             if (msg == null) {
                 conn.commit();
-                LOGGER.info("Responded with failure to a retrieve message request from " +
-                        address + " because no message was found.");
+                //TODO: P2a
+                record = new ClientConnectionLogRecord(Level.INFO, address, SystemEvent.RETRIEVE_MESSAGE,
+                		"Responded with failure to a retrieve message request from " +
+                                address + " because no message was found.", record);
+                record.setSuccess(false);                
+                LOGGER.log(record);
+                
                 RequestResponse errorResponse = new RequestResponse(
                         Status.NO_MESSAGE);
                 return ProtocolMessage.toBytes(errorResponse);
             } else {
-                LOGGER.info("Found message " + msg.getId() + " filtered by " +
+            	//TODO: P2b
+                record = new ClientConnectionLogRecord(address, SystemEvent.RETRIEVE_MESSAGE, 
+                		"Found message " + msg.getId() + " filtered by " +
                         retrieveMessageRequest.getFilterType().toString() +
                         " ordered by " +
                         retrieveMessageRequest.getOrderBy().toString() +
-                        " for " + address + ".");
+                        " for " + address + ".", record);
+                LOGGER.log(record);
+                
                 if (isPop) {
                     DeleteMessage.execute(msg.getId(), msg.getQueueName(), conn);
                     conn.commit();
-                    LOGGER.info("Popped message " + msg.getId() + " from queue " + msg.getQueueName() +
-                            " for " + address + ".");
+                    //TODO: P3
+                    LOGGER.log(new ClientConnectionLogRecord(Level.INFO, address, SystemEvent.RETRIEVE_MESSAGE,
+                    		"Popped message " + msg.getId() + " from queue " + msg.getQueueName() +
+                            " for " + address + ".", record));
+                    
                 } else {
                     conn.commit();
                 }
@@ -733,9 +829,10 @@ public class ClientConnection {
                 return ProtocolMessage.toBytes(messageResponse);
             }
         } catch (SQLException e) {
-            LOGGER.severe("Caught exception while trying to retrieve message for " +
-                    address + ".");
-            LOGGER.log(Level.SEVERE, "", e);
+            LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.RETRIEVE_MESSAGE, 
+            		"Caught exception while trying to retrieve message for " +
+                    address + ".", record, e));
+            
             RequestResponse errorResponse = new RequestResponse(
                     Status.EXCEPTION, e.toString());
             if (conn != null)
@@ -765,8 +862,11 @@ public class ClientConnection {
      * @return the buffer with the response.
      */
     private ByteBuffer getQueues(String address) {
-        LOGGER.info("Received request to retrieve queues with pending messages for " +
+    	ClientConnectionLogRecord record = new ClientConnectionLogRecord(address, SystemEvent.FETCH_WAITING_QUEUES,
+    			"Received request to retrieve queues with pending messages for " +
                 client.getClientUsername() + " from " + address + ".");
+    	LOGGER.log(record);
+    	
         Connection conn = null;
         try {
             conn = dbConnectionDispatcher.retrieveDatabaseConnection();
@@ -774,12 +874,17 @@ public class ClientConnection {
                     client.getClientId(), conn);
             conn.commit();
             if(result.size() > 0){
-                LOGGER.info("Found " + result.size() +
-                        " queues with messages waiting for " + address + ".");
+            	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.FETCH_WAITING_QUEUES,
+            			"Found " + result.size() + " queues with messages waiting for " + address + ".",
+            			record));
+            	
                 GetQueuesResponse queueResponse = new GetQueuesResponse(result);
                 return ProtocolMessage.toBytes(queueResponse);
             } else {
-                LOGGER.info("Did not find any queues with messages waiting for " + address + ".");
+            	LOGGER.log(new ClientConnectionLogRecord(address, SystemEvent.FETCH_WAITING_QUEUES,
+            			"Did not find any queues with messages waiting for " + address + ".",
+            			record));
+            	
                 RequestResponse response = new RequestResponse(Status.NO_QUEUE);
                 return ProtocolMessage.toBytes(response);
             }
@@ -811,7 +916,7 @@ public class ClientConnection {
      *            Rollback exception.
      */
     private void logRollbackException(SQLException e) {
-        LOGGER.severe("Caught exception while trying to rollback.");
+    	LOGGER.severe("Caught exception while trying to rollback.");
         LOGGER.log(Level.SEVERE, "", e);
     }
 

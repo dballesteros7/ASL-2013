@@ -6,8 +6,10 @@
 package org.ftab.server;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -25,6 +27,7 @@ import java.util.logging.Logger;
 import org.ftab.communication.ProtocolMessage;
 import org.ftab.communication.responses.RequestResponse;
 import org.ftab.communication.responses.RequestResponse.Status;
+import org.ftab.logging.server.ServerManagerLogRecord;
 
 /**
  * The ServerManager class is the entry point of the messaging server and serves
@@ -41,10 +44,21 @@ public class ServerManager implements Runnable {
             .getName());
 
     /**
+     * An id used to distinguish servers on the same machine from one another
+     */
+    private static int uniqueServerID = 0;
+    
+    /**
      * Port where the server will listen for incoming connections
      */
     private final int listeningPort;
 
+    /**
+     * The name of the server
+     */
+    private final String serverName;
+    
+    
     /**
      * List of current active workers. TODO: Currently the workers don't die,
      * correct that and implement a guard for the list so it can be modified by
@@ -103,13 +117,24 @@ public class ServerManager implements Runnable {
 
         // 3. Configure other attributes
         listeningPort = nListeningPort;
+        String hostname = null;
+        try {
+        	hostname = InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			hostname = "unknownhost";
+		} finally {
+			synchronized (this) {
+				serverName = String.format("server%d@%s:%d", uniqueServerID++, hostname, listeningPort);
+			}
+		}
         workers = new LinkedList<MessagingWorker>();
         keepRunning = true;
-        LOGGER.config(String.format(
-                "Created server with the following settings:\n"
+                
+        LOGGER.log(new ServerManagerLogRecord(Level.CONFIG, this, 
+        		String.format("Created server with the following settings:\n"
                         + "Number of workers: %d\nClients per worker: %d\n"
                         + "Listening port: %d\nServer ready!", nWorkerThreads,
-                nClientsPerWorker, nListeningPort));
+                nClientsPerWorker, nListeningPort)));
     }
 
     /**
@@ -144,7 +169,9 @@ public class ServerManager implements Runnable {
      *             channel.
      */
     public void run() {
-        LOGGER.info("Server starting.");
+    	ServerManagerLogRecord record = new ServerManagerLogRecord(this, "Server starting.");
+    	LOGGER.log(record);
+    	
         Selector serverSelector = null;
         ServerSocketChannel ssc = null;
         try {
@@ -156,11 +183,17 @@ public class ServerManager implements Runnable {
             InetSocketAddress address = new InetSocketAddress(listeningPort);
             ss.bind(address);
             ssc.register(serverSelector, SelectionKey.OP_ACCEPT);
-            LOGGER.config(String
-                    .format("Server socket created and registered, listening IP: [%s:%d].",
-                            address.getHostName(), address.getPort()));
+            
+            record = new ServerManagerLogRecord(Level.CONFIG, this, 
+            		String.format("Server socket created and registered, listening IP: [%s:%d].",
+                            address.getHostName(), address.getPort()), record);
+            LOGGER.log(record);
+            
             while (!Thread.interrupted() && keepRunning) {
-                LOGGER.config("Polling for selector events.");
+            	ServerManagerLogRecord innerRecord = new ServerManagerLogRecord(this, 
+            			"Polling for selector events.", record);  
+            	LOGGER.log(innerRecord);
+            	
                 serverSelector.select();
                 Set<SelectionKey> selectedKeys = serverSelector.selectedKeys();
                 Iterator<SelectionKey> it = selectedKeys.iterator();
@@ -173,18 +206,27 @@ public class ServerManager implements Runnable {
                         // we can assume which one it is.
                         SocketChannel sc = ssc.accept();
                         sc.configureBlocking(false);
-                        LOGGER.info("Received incoming connection "
-                                + ServerLogger.parseSocketAddress(sc) + ".");
+                        
+                        ServerManagerLogRecord innerInnerRecord = 
+                        		new ServerManagerLogRecord(this, "Received incoming connection "
+                        		+ ServerLogger.parseSocketAddress(sc) + ".", innerRecord);
+                        LOGGER.log(innerInnerRecord);
+                        
                         // Check if the server is full or not, if it is then
                         // register the socket for writing so we can inform the
                         // client that we can't accept the connection. Otherwise
                         // delegate to the first available thread.
                         if (serverFull()) {
-                            LOGGER.config("Registering connection "
-                                    + "for write, server is full.");
+                        	LOGGER.log(new ServerManagerLogRecord(this, 
+                        			"Registering connection for write, server is full",
+                        			innerInnerRecord));
+                        	
                             sc.register(serverSelector, SelectionKey.OP_WRITE);
                         } else {
-                            LOGGER.config("Delegating connection to available worker.");
+                        	LOGGER.log(new ServerManagerLogRecord(this, 
+                        			"Delegating connection to available worker.",
+                        			innerInnerRecord));                            
+                            
                             delegateSocketToWorker(sc);
                         }
                     } else if (key.isWritable()) {
@@ -197,32 +239,33 @@ public class ServerManager implements Runnable {
                         while (responseBuffer.hasRemaining()) {
                             sc.write(responseBuffer);
                         }
-                        LOGGER.info("Refused connection from "
-                                + ServerLogger.parseSocketAddress(sc)
-                                + " because the server is full.");
+                        
+                        LOGGER.log(new ServerManagerLogRecord(this,
+                        		"Refused connection from " + ServerLogger.parseSocketAddress(sc) + " because the server is full.",
+                        		innerRecord));
                         key.cancel();
                         sc.close();
                     }
                 }
             }
         } catch (IOException e) {
-            LOGGER.severe("There was an IO error while running the server, shutting it down.");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new ServerManagerLogRecord(this,
+        			"There was an IO error while running the server, shutting it down.", record, e));
         } finally {
             if (ssc != null) {
                 try {
                     ssc.close();
                 } catch (IOException e) {
-                    LOGGER.severe("IO exception while closing server channel, it is unrecoverable.");
-                    LOGGER.log(Level.SEVERE, "", e);
+                	LOGGER.log(new ServerManagerLogRecord(this, 
+                			"IO exception while closing server channel, it is unrecoverable.", record, e));
                 }
             }
             if (serverSelector != null) {
                 try {
                     serverSelector.close();
                 } catch (IOException e) {
-                    LOGGER.severe("IO exception while closing the server selector, it is unrecoverable.");
-                    LOGGER.log(Level.SEVERE, "", e);
+                	LOGGER.log(new ServerManagerLogRecord(this, 
+                			"IO exception while closing the server selector, it is unrecoverable.", record, e));
                 }
             }
         }
@@ -244,14 +287,17 @@ public class ServerManager implements Runnable {
      * the start method.
      */
     public void shutdown() {
-        LOGGER.info("Gracefully shutting down the server.");
+    	LOGGER.log(new ServerManagerLogRecord(Level.INFO, this, "Gracefully shutting down the server."));
+    	
         for (MessagingWorker worker : workers) {
             worker.stopRunning();
             while (!worker.isShutdown());
         }
         dbConnectionDispatcher.closePool();
         threadPool.shutdown();
-        LOGGER.info("Ready to leave.");
+        
+        LOGGER.log(new ServerManagerLogRecord(Level.INFO, this, "Ready to leave."));
+        
         ServerLogger.closeLogger();
     }
 
@@ -265,19 +311,24 @@ public class ServerManager implements Runnable {
      *            SocketChannel to assign to a worker.
      */
     private void delegateSocketToWorker(SocketChannel sc) {
-        try {
-
+    	try {
+        	        	
             // Check if we are not in the limit of workers, if so then create
             // one.
             if (workers.size() < maxThreads) {
                 MessagingWorker newWorker = new MessagingWorker(
-                        maxClientsPerWorker, dbConnectionDispatcher);
-                LOGGER.info("Created new worker: " + newWorker.getIdentifier()
-                        + ".");
+                        maxClientsPerWorker, dbConnectionDispatcher, this.getServerName());
+                
+                ServerManagerLogRecord record = new ServerManagerLogRecord(this, 
+                		"Created new worker: " + newWorker.getIdentifier() + ".");
+                LOGGER.log(record);
+                
                 newWorker.registerChannel(sc);
-                LOGGER.info("Assigned connection from "
-                        + ServerLogger.parseSocketAddress(sc) + " to worker "
-                        + newWorker.getIdentifier() + ".");
+                
+                LOGGER.log(new ServerManagerLogRecord(this,
+                		String.format("Assigned connection from %s to worker %s.", 
+                				ServerLogger.parseSocketAddress(sc), newWorker.getIdentifier()), record));
+                
                 threadPool.execute(newWorker);
                 workers.add(newWorker);
             } else {
@@ -292,16 +343,15 @@ public class ServerManager implements Runnable {
                     }
                 }
                 minWorker.registerChannel(sc);
-                LOGGER.info("Assigned connection from "
-                        + ServerLogger.parseSocketAddress(sc) + " to worker "
-                        + minWorker.getIdentifier() + ".");
+                
+                LOGGER.log(new ServerManagerLogRecord(this, 
+                		String.format("Assigned connection from %s to worker %s.", 
+                				ServerLogger.parseSocketAddress(sc), minWorker.getIdentifier())));
             }
         } catch (IOException e) {
-            LOGGER.severe("There was an error creating a worker");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new ServerManagerLogRecord(this, "There was an error creating a worker.", e));
         } catch (RejectedExecutionException e) {
-            LOGGER.severe("Thread pool could not accept a worker.");
-            LOGGER.log(Level.SEVERE, "", e);
+        	LOGGER.log(new ServerManagerLogRecord(this, "Thread pool could not accept a worker.", e)); 
         }
     }
 
@@ -322,6 +372,15 @@ public class ServerManager implements Runnable {
         return true;
     }
 
+    /**
+     * Retrieves the name of the server
+     * @return A name associated with the server
+     */
+    public String getServerName() {
+		return serverName;
+	}
+    
+    
     /**
      * Entry point for the server. Build a server manager using the standard
      * factory and start it in a separate thread.
