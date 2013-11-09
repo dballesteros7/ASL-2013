@@ -112,13 +112,13 @@ public class ServerManagerTest {
 		queues.add("Alice's Vault");
 		for (int i = 0; i < 100; ++i) {
 			alice.SendMessage("This is test message No. " + i,
-					(byte) ((i % 10) + 1), 0, queues.toArray(new String[queues.size()]));
+					(byte) ((i % 10) + 1), 100, queues.toArray(new String[queues.size()]));
 		}
 		assertTrue(alice.CreateQueue("Alice's Rant Place"));
 		queues.add("Alice's Rant Place");
 		for (int i = 0; i < 100; ++i) {
 			alice.SendMessage("This is angry test message No. " + i,
-					(byte) ((i % 10) + 1), 0, queues.toArray(new String[queues.size()]));
+					(byte) ((i % 10) + 1), 200, queues.toArray(new String[queues.size()]));
 		}
 		conn = dispatch.retrieveDatabaseConnection();
 		ArrayList<Queue> queuesInDB = RetrieveQueues.execute(conn);
@@ -162,20 +162,20 @@ public class ServerManagerTest {
 
 		for (int i = 0; i < 500; ++i) {
 			assertTrue(alice.SendMessage("The ping-pong ball",
-					(byte) (i % 10 + 1), 0,
+					(byte) (i % 10 + 1), 100,
 					bobInbox.toArray(new String[bobInbox.size()])));
 			org.ftab.client.Message msg = bob.ViewMessageFromSender("Alice",
 					true);
 			assertEquals(msg.getContent(), "The ping-pong ball");
-			assertEquals(msg.getContext(), 0);
+			assertEquals(msg.getContext(), 100);
 			assertEquals(msg.getQueues().iterator().next(), "Bob's Inbox");
 			assertTrue(bob.SendMessage("The ping-pong ball",
-					(byte) (i % 10 + 1), 1,
+					(byte) (i % 10 + 1), 200,
 					aliceInbox.toArray(new String[aliceInbox.size()])));
 			msg = alice.ViewMessageFromQueue("Alice's Inbox", false,
 					Order.TIMESTAMP);
 			assertEquals(msg.getContent(), "The ping-pong ball");
-			assertEquals(msg.getContext(),1);
+			assertEquals(msg.getContext(),200);
 			assertEquals(msg.getSender(), "Bob");
 		}
 

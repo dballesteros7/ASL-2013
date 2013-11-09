@@ -37,7 +37,7 @@ public class Create {
      */
     private final static String SQL02_CREATE_MSG = "CREATE TABLE message ("
             + "id BIGSERIAL PRIMARY KEY, sender INTEGER NOT NULL,"
-            + "receiver INTEGER, context SMALLINT DEFAULT 0,"
+            + "receiver INTEGER, context INTEGER DEFAULT 0,"
             + "prio SMALLINT DEFAULT 0, create_time INTEGER NOT NULL,"
             + "message VARCHAR(2000) NOT NULL,"
             + "FOREIGN KEY (sender) REFERENCES client(id) ON DELETE CASCADE,"

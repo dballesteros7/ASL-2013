@@ -24,7 +24,6 @@ import os
 import threading
 import linecache
 
-from org.ftab.communication.requests.SendMessageRequest import Context
 from org.ftab.client import Client
 
 class BroadcastClient(threading.Thread):
@@ -74,7 +73,7 @@ class BroadcastClient(threading.Thread):
 
     def sendMessage(self, msg):
         queueToSend = random.choice(self.queues)
-        context = Context.valueOf("NONE");
+        context = 0;
         start = time.time()
         result = self.clientInstance.SendMessage(msg, 5, context, [queueToSend])
         end = time.time()

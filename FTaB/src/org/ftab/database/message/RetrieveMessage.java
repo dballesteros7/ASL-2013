@@ -139,7 +139,7 @@ public class RetrieveMessage {
             else
                 sender = argument;
             Message formattedResult = new Message(result.getLong("msg_id"),
-                    result.getShort("context"), result.getShort("prio"),
+                    result.getInt("context"), result.getShort("prio"),
                     result.getString("message"), sender,
                     result.getInt("create_time"), result.getString("name"),
                     result.getLong("queue_id"), result.getString("receiver"));

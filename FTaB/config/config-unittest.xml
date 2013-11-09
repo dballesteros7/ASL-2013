@@ -4,7 +4,7 @@
     <ClientsPerWorker>2</ClientsPerWorker>
     <LoggingLevel>INFO</LoggingLevel>
     <LogOutput>/tmp/unittestlog%g.log</LogOutput>
-    <ListeningPort>34575</ListeningPort>
+    <ListeningPort>34582</ListeningPort>
     <DatabaseUser>diegob</DatabaseUser>
     <DatabasePassword></DatabasePassword>
     <DatabaseServer>localhost</DatabaseServer>

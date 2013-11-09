@@ -31,11 +31,11 @@ def main():
         possibleQueues.append(queue)
     clients = []
     for i in xrange(clientNumber):
-        client = BroadcastClient("Alice-6-%d" % i, 2000, possibleQueues, logPath)
+        client = BroadcastClient("Alice-7-%d" % i, 2000, possibleQueues, logPath)
         client.setup(serverA, portA)
         clients.append(client)
     for i in xrange(clientNumber):
-        client = ReaderClient("Bob-6-%d" % i, possibleQueues, logPath)
+        client = ReaderClient("Bob-7-%d" % i, possibleQueues, logPath)
         client.setup(serverB, portB)
         clients.append(client)
     for client in clients:

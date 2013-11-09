@@ -43,7 +43,7 @@ public class Message {
     /**
      * Context of the message (i.e. None, request, response).
      */
-    private final short context;
+    private final int context;
 
     /**
      * Priority of the message.
@@ -85,7 +85,7 @@ public class Message {
      * @param nReceiver
      *            client that is supposed to receive the message.
      */
-    public Message(long nId, short nContext, short nPrio, String nContent,
+    public Message(long nId, int nContext, short nPrio, String nContent,
             String nSender, int nCreateTime, String nQueueName, long nQueueId,
             String nReceiver) {
         id = nId;
@@ -113,7 +113,7 @@ public class Message {
      * 
      * @return message's context.
      */
-    public short getContext() {
+    public int getContext() {
         return context;
     }
 
