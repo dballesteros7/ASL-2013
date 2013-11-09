@@ -3,8 +3,8 @@
     <WorkerThreads>5</WorkerThreads>
     <ClientsPerWorker>2</ClientsPerWorker>
     <LoggingLevel>INFO</LoggingLevel>
-    <LogOutput>/home/diegob/logs/serverlog-1-%g.log</LogOutput>
-    <ListeningPort>34582</ListeningPort>
+    <LogOutput>/home/diegob/logs/serverlog-2-%g.log</LogOutput>
+    <ListeningPort>34583</ListeningPort>
     <DatabaseUser>diegob</DatabaseUser>
     <DatabasePassword></DatabasePassword>
     <DatabaseServer>localhost</DatabaseServer>

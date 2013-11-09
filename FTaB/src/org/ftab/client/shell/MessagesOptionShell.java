@@ -14,7 +14,6 @@ import org.ftab.client.exceptions.QueueInexistentException;
 import org.ftab.client.exceptions.UnspecifiedErrorException;
 import org.ftab.client.shell.ClientShell.Options;
 import org.ftab.communication.exceptions.InvalidHeaderException;
-import org.ftab.communication.requests.SendMessageRequest.Context;
 import org.ftab.pubenums.Filter;
 import org.ftab.pubenums.Order;
 
@@ -211,7 +210,7 @@ final class MessagesOptionShell {
 			String[] queues;
 			String receiver, content;
 			byte priority;
-			Context context;
+			int context;
 			try {
 				// Get the queues
 				queues = getQueuesToSendTo();
@@ -255,25 +254,14 @@ final class MessagesOptionShell {
 		 * @return The context for the message
 		 * @throws CancelOperationException If the operation was cancelled
 		 */
-		private static Context getContextFromConsole() throws CancelOperationException {
-			StringBuilder builder = new StringBuilder("Please select the number of a message context from the list below:\n");
-			
-			Context[] values = Context.values();
-			
-			// Prints each line in the main menu
-			for (int i = 0; i < values.length; i++) {
-				builder.append(String.format(ClientShell.MENU_ITEM_FORMAT_STRING, i + 1, values[i].toString()));
-			}
-			
-			System.out.println(builder.toString());
-			
+		private static int getContextFromConsole() throws CancelOperationException {
 			boolean validInput;
 			int result = -1;
 			
 			do {
 				validInput = true;
 							
-				System.out.print("Selection: ");
+				System.out.print("Please enter the message context [0-" + Integer.MAX_VALUE +"]: ");
 				
 				try {
 					String input = in.nextLine();
@@ -285,7 +273,7 @@ final class MessagesOptionShell {
 					
 					result = Integer.parseInt(input);
 					
-					if (result < 1 || result > values.length) {
+					if (result < 0) {
 						throw new NumberFormatException("Input outside of range.");
 					}	
 				} catch (NumberFormatException ex) {
@@ -293,10 +281,8 @@ final class MessagesOptionShell {
 					validInput = false;
 				}			
 			} while (!validInput);
-			
-			System.out.println();
-			
-			return values[result - 1];			
+						
+			return result;			
 		}
 		
 		/**

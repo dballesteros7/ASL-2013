@@ -11,7 +11,6 @@ import java.util.regex.Pattern;
 
 import org.ftab.communication.ProtocolMessage;
 import org.ftab.communication.requests.RetrieveMessageRequest;
-import org.ftab.communication.requests.SendMessageRequest.Context;
 import org.ftab.database.Message;
 
 /**
@@ -28,11 +27,6 @@ public class RetrieveMessageResponse extends ProtocolMessage {
      * Escape string for serialization.
      */
     public final static String ESCAPE_CHAR = "&";
-    /**
-     * Cache of the Context possible values.
-     */
-    private final static Context[] CONTEXT_CACHE = Context.values();
-
     /**
      * Message identifier.
      */
@@ -60,7 +54,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
     /**
      * Message context.
      */
-    private final Context context;
+    private final int context;
 
     /**
      * Create a response with the given information.
@@ -82,7 +76,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
      */
     public RetrieveMessageResponse(long nMessageid, String nMessage,
             String nSender, String nReceiver, String nQueueName, int nPriority,
-            Context nContext) {
+            int nContext) {
         messageId = nMessageid;
         message = nMessage;
         sender = nSender;
@@ -106,7 +100,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
         receiver = msg.getReceiver();
         queueName = msg.getQueueName();
         priority = msg.getPriority();
-        context = CONTEXT_CACHE[msg.getContext()];
+        context = msg.getContext();
         messageType = MessageType.RETURNED_MESSAGES;
     }
 
@@ -179,7 +173,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
      * 
      * @return message context.
      */
-    public Context getContext() {
+    public int getContext() {
         return context;
     }
 
@@ -206,7 +200,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
                         + SEPARATOR, SEPARATOR),
                 candidateReceiver.equals("") ? null : candidateReceiver,
                 tokens[4].replace(ESCAPE_CHAR + SEPARATOR, SEPARATOR),
-                Integer.parseInt(tokens[5]), Context.valueOf(tokens[6]));
+                Integer.parseInt(tokens[5]), Integer.parseInt(tokens[6]));
         return instance;
     }
 
@@ -223,7 +217,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
         String serialized = messageId + SEPARATOR + escapedMessage + SEPARATOR
                 + escapedSender + SEPARATOR + escapedReceiver + SEPARATOR
                 + escapedQueue + SEPARATOR + priority + SEPARATOR
-                + context.name();
+                + context;
         Charset encoder = Charset.forName(CHARSET);
         ByteBuffer bb = encoder.encode(serialized);
         return bb;

@@ -78,7 +78,7 @@ public class CreateMessage {
      *             if the message was not created but no error was triggered.
      */
     public static void execute(int sender, String receiver,
-            Iterable<String> queues, short context, short priority,
+            Iterable<String> queues, int context, short priority,
             String message, Connection conn) throws SQLException,
             InexistentQueueException, InexistentClientException,
             CreateMessageException {
@@ -100,7 +100,7 @@ public class CreateMessage {
             stmt = conn.prepareStatement(SQL_INSERT_RECEIVER);
             stmt.setInt(1, sender);
             stmt.setInt(2, receiver_id);
-            stmt.setShort(3, context);
+            stmt.setInt(3, context);
             stmt.setShort(4, priority);
             stmt.setInt(5, current_time_int);
             stmt.setString(6, message);
@@ -139,7 +139,7 @@ public class CreateMessage {
      *             if the message was not created but no error was triggered.
      */
     public static void execute(int sender, Iterable<String> queues,
-            short context, short priority, String message, Connection conn)
+            int context, short priority, String message, Connection conn)
             throws SQLException, InexistentQueueException,
             CreateMessageException {
         PreparedStatement stmt = null;
@@ -150,7 +150,7 @@ public class CreateMessage {
             int current_time_int = (int) (current_time / 1000.0);
             stmt = conn.prepareStatement(SQL_INSERT_NO_RECEIVER);
             stmt.setInt(1, sender);
-            stmt.setShort(2, context);
+            stmt.setInt(2, context);
             stmt.setShort(3, priority);
             stmt.setInt(4, current_time_int);
             stmt.setString(5, message);

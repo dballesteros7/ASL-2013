@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,10 +15,9 @@ import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.GetQueuesRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.RetrieveMessageRequest;
-import org.ftab.communication.requests.RetrieveMessageRequest.Filter;
-import org.ftab.communication.requests.RetrieveMessageRequest.Order;
 import org.ftab.communication.requests.SendMessageRequest;
-import org.ftab.communication.requests.SendMessageRequest.Context;
+import org.ftab.pubenums.Filter;
+import org.ftab.pubenums.Order;
 import org.junit.Test;
 
 /**
@@ -203,7 +203,11 @@ public class ProtocolMessageTest {
 	 */
 	@Test
 	public void testSendMessageRequestToFromBytes() {
-		for (Context context : Context.values()) {
+		ArrayList<Integer> values = new ArrayList<Integer>();
+		values.add(0);
+		values.add(1);
+		values.add(2);
+		for (int context : values) {
 			SendMessageRequest request1 = new SendMessageRequest("A random array of characters...", (byte)5, context,
 					Arrays.asList("queue 1", "queue 2", "pipe queue 3", "piped turnover 4"));
 			SendMessageRequest request2 = new SendMessageRequest("A random array...", (byte)3, context,

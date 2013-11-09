@@ -24,7 +24,6 @@ import org.ftab.communication.requests.ConnectionRequest;
 import org.ftab.communication.requests.GetQueuesRequest;
 import org.ftab.communication.requests.QueueModificationRequest;
 import org.ftab.communication.requests.SendMessageRequest;
-import org.ftab.communication.requests.SendMessageRequest.Context;
 import org.ftab.communication.responses.GetQueuesResponse;
 import org.ftab.communication.responses.RequestResponse;
 import org.ftab.communication.responses.RequestResponse.Status;
@@ -160,7 +159,7 @@ public class ClientTests_AlreadyConnected {
 		final String[] messages = { "Hello world!", "Hello world! Prepare to die edition...", 
 				"This is bound to fail" };
 		final byte[] priorities = { 5, 9, 1 };
-		final Context[] contexts = { Context.NONE, Context.REQUEST, Context.RESPONSE };
+		final int[] contexts = { 0, 1, 2 };
 		final String[] receivers = { null, "mary", "mallot" };
 		final String[][] queues = new String[][] { 
 				{"queue 1", "queue 2", "queue 3", "queue 4" },

@@ -7,7 +7,6 @@ package org.ftab.client;
 
 import java.util.ArrayList;
 
-import org.ftab.communication.requests.SendMessageRequest.Context;
 
 /**
  * Encapsulates a message
@@ -43,7 +42,7 @@ public class Message {
     /**
      * Context of the message (i.e. None, request, response).
      */
-    private final Context context;
+    private final int context;
 
     /**
      * Priority of the message.
@@ -75,7 +74,7 @@ public class Message {
      * @param nQueues
      *            the name of the queue or queues on which the message resided or is to be sent to
      */
-    public Message(long nId, Context nContext, byte nPrio, String nContent,
+    public Message(long nId, int nContext, byte nPrio, String nContent,
             String nSender, String nReceiver, String... nQueues) {
         id = nId;
         content = nContent;
@@ -104,7 +103,7 @@ public class Message {
      * @param nQueues
      *            the name of the queue or queues on which the message resided or is to be sent to
      */
-    public Message(Context nContext, byte nPrio, String nContent,
+    public Message(int nContext, byte nPrio, String nContent,
             String nSender, String nReceiver, String... nQueues) {
     	id = Message.NO_ID;
         content = nContent;
@@ -129,7 +128,7 @@ public class Message {
      * 
      * @return message's context.
      */
-    public Context getContext() {
+    public int getContext() {
         return context;
     }
 
@@ -192,7 +191,7 @@ public class Message {
     		stringRep.append(String.format("Sender: %s \n", this.getSender()));
     	}
     	
-    	stringRep.append(String.format("Priority: %d \t Context: %s \n", this.getPriority(), this.getContext().name()));
+    	stringRep.append(String.format("Priority: %d \t Context: %d \n", this.getPriority(), this.getContext()));
     	
     	stringRep.append(String.format("Queues: %s \n", this.queues.toString()));
     	
@@ -206,8 +205,8 @@ public class Message {
      * @return A string summarising the contents of this messages
      */
     public String getSummary() {
-    	return String.format("Message from %s to %s on %d queues with priority %d, context %s and %d characters",
+    	return String.format("Message from %s to %s on %d queues with priority %d, context %d and %d characters",
     			this.getSender(), (this.getReceiver() == null) ? "no one" : this.getReceiver(), this.queues.size(),
-    					this.getPriority(), this.getContext().name(), this.getContent().length());
+    					this.getPriority(), this.getContext(), this.getContent().length());
     }
 }

@@ -152,7 +152,7 @@ def plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 10):
 
     total = []
     for key in data:
-        if(key[0] - globalMin > 7000):
+        if(key[0] - globalMin > 800):
             continue
         for val in data[key]:
             total.append(val)
@@ -168,8 +168,10 @@ def plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 10):
     return plt, p1
 
 def main():
-    logList = glob.glob(os.path.join('/home/diegob/dataWorkplace/Bob*log'))
-    plotAverageResponseTime(logList, eventKeyword = 'READ', windowSize = 120)[0].show()
+    logList = glob.glob(os.path.join('/home/diegob/logs/Bob-6-*log'))
+    plotAverageResponseTime(logList, eventKeyword = 'READ', windowSize = 60)[0]
+    logList = glob.glob(os.path.join('/home/diegob/logs/Alice-6-*log'))
+    plotAverageResponseTime(logList, eventKeyword = 'SEND', windowSize = 60)[0].show()
     #plotAverageResponseTime(logList, eventKeyword = 'READ', windowSize = 120).show()
     #_, p1 = plotThroughput(logList, eventKeyword = 'SEND', windowSize = 120)
     #plt, p2 = plotThroughput(logList, eventKeyword = 'READ', windowSize = 120)

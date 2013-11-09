@@ -9,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
 
-import org.ftab.communication.requests.SendMessageRequest.Context;
 import org.ftab.communication.responses.RetrieveMessageResponse;
 import org.ftab.database.Message;
 import org.junit.Test;
@@ -78,14 +77,14 @@ public class RetrieveMessageResponseTest {
     public void testConstructor() {
         RetrieveMessageResponse rmr = new RetrieveMessageResponse(
                 Long.MIN_VALUE, "Hey, I am a message", "I sent it",
-                "I receive it", "To this queue", 10, Context.RESPONSE);
+                "I receive it", "To this queue", 10, 1);
         assertEquals(rmr.getMessageId(), Long.MIN_VALUE);
         assertEquals(rmr.getMessageContent(), "Hey, I am a message");
         assertEquals(rmr.getSender(), "I sent it");
         assertEquals(rmr.getReceiver(), "I receive it");
         assertEquals(rmr.getQueue(), "To this queue");
         assertEquals(rmr.getPriority(), 10);
-        assertEquals(rmr.getContext(), Context.RESPONSE);
+        assertEquals(rmr.getContext(), 1);
     }
 
     /**

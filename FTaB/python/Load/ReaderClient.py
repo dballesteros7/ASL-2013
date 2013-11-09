@@ -62,7 +62,7 @@ class ReaderClient(threading.Thread):
 
     def getNextMessage(self):
         start = time.time()
-        msg = self.clientInstance.ViewMessageFromQueue(random.choice(self.queues), True)
+        msg = self.clientInstance.ViewMessageFromQueue(random.choice(self.queues), False)
         end = time.time()
         if msg:
             self.logFile.write("READ %s %s\n" % (start, end))

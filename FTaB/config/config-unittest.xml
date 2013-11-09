@@ -4,10 +4,10 @@
     <ClientsPerWorker>2</ClientsPerWorker>
     <LoggingLevel>INFO</LoggingLevel>
     <LogOutput>/tmp/unittestlog%g.log</LogOutput>
-    <ListeningPort>34582</ListeningPort>
-    <DatabaseUser>user25</DatabaseUser>
-    <DatabasePassword>dbaccess25</DatabasePassword>
-    <DatabaseServer>dryad09.ethz.ch:5454</DatabaseServer>
-    <DatabaseName>test1</DatabaseName>
+    <ListeningPort>34575</ListeningPort>
+    <DatabaseUser>diegob</DatabaseUser>
+    <DatabasePassword></DatabasePassword>
+    <DatabaseServer>localhost</DatabaseServer>
+    <DatabaseName>unittest</DatabaseName>
     <DatabaseConnections>5</DatabaseConnections>
 </ServerManager>

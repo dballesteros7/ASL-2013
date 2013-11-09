@@ -66,16 +66,16 @@ public class Create {
             + "msg_receiver_idx ON message (receiver)";
 
     /**
-     * SQL query to create an index on the message table by priority.
+     * SQL query to create an index on the message table by priority, then create_time.
      */
     private final static String SQL03_MSG_PRIO_IDX = "CREATE INDEX "
-            + "msg_prio_idx ON message (prio DESC)";
+            + "msg_prio_idx ON message (prio DESC, create_time DESC)";
 
     /**
-     * SQL query to create an index on the message table by create_time.
+     * SQL query to create an index on the message table by create_time, then priority.
      */
     private final static String SQL03_MSG_TIME_IDX = "CREATE INDEX "
-            + "msg_time_idx ON message (create_time DESC)";
+            + "msg_time_idx ON message (create_time DESC, prio DESC)";
 
     /**
      * SQL query to create an index on the msg_queue_assoc table by message id.

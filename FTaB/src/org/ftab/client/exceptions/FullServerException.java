@@ -23,7 +23,7 @@ public class FullServerException extends FTaBServerException {
 	 * @param port The port number of the server 
 	 */
 	public FullServerException(String serverName, int port) { 
-		super(String.format("The server at %s:%i is full and will not accept any more connections.", 
+		super(String.format("The server at %s:%d is full and will not accept any more connections.", 
 				serverName, port));
 		
 		this.serverPort = port;

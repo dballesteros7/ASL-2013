@@ -11,7 +11,6 @@ import org.ftab.client.exceptions.QueueNotEmptyException;
 import org.ftab.client.exceptions.UnspecifiedErrorException;
 import org.ftab.client.serverrpc.ServerRPC;
 import org.ftab.communication.exceptions.InvalidHeaderException;
-import org.ftab.communication.requests.SendMessageRequest.Context;
 import org.ftab.client.exceptions.QueueAEException;
 import org.ftab.logging.client.ClientConnectionRecord;
 import org.ftab.logging.client.ClientDisconRecord;
@@ -174,7 +173,7 @@ public class Client {
 	 * @throws IOException If an error occurred with the channel
 	 * @throws InvalidHeaderException If the input data was somehow corrupted
 	 */
-	public boolean SendMessage(String message, byte priority, Context context, String receiver, String... queues) 
+	public boolean SendMessage(String message, byte priority, int context, String receiver, String... queues) 
 			throws QueueInexistentException, UnspecifiedErrorException, ClientInexistentException, IOException, InvalidHeaderException {
 		
 		final Message msg = new Message(context, priority, message, this.getUsername(), receiver, queues);
@@ -213,7 +212,7 @@ public class Client {
 	 * @throws IOException If an error occurred with the channel
 	 * @throws InvalidHeaderException If the input data was somehow corrupted
 	 */
-	public boolean SendMessage(String message, byte priority, Context context, String... queues) 
+	public boolean SendMessage(String message, byte priority, int context, String... queues) 
 			throws QueueInexistentException, UnspecifiedErrorException, ClientInexistentException, IOException, InvalidHeaderException {
 		return this.SendMessage(message, priority, context, null, queues);
 	}

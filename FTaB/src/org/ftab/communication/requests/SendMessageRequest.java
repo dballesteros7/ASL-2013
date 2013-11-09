@@ -23,67 +23,6 @@ import org.ftab.communication.ProtocolMessage;
  */
 public class SendMessageRequest extends ProtocolMessage {
     /**
-     * Identifies the context of a message, be it a request a response or no 
-     * defined context.
-     * @author Jean-Pierre Smith
-     *
-     */
-	public enum Context {
-        REQUEST(REQ_CONTEXT, "Request"), RESPONSE(RESP_CONTEXT, "Response"), NONE(NO_CONTEXT, "Neither");
-        
-        /**
-         * The associated byte value for an enum constant
-         */
-        private byte byteValue;
-        
-        /**
-         * The string representation of the enumerated value.
-         */
-        private String stringRep;
-        
-        /**
-         * Creates the enum type with a specified mapping to a byte value.
-         * @param mapping The byte value corresponding to the enum
-         */
-        Context(byte mapping, String stringRep) {
-        	byteValue = mapping;
-        	this.stringRep = stringRep;
-        }
-        
-        /**
-         * Converts the enumeration constant to a byte value.
-         * @return The byte value associated with the enumeration.
-         */
-        public byte getByteValue() {
-        	return byteValue;
-        }
-        
-        /**
-         * Converts a byte value to an enumeration constant
-         * @param b The byte value to convert
-         * @return The enumerated constant corresponding to the supplied byte value.
-         */
-        public static Context fromByte(byte b) {
-        	for(Context cont : Context.values()) {
-        		if(b == cont.getByteValue()) {
-        			return cont;
-        		}
-        	}
-        	throw new IllegalArgumentException("That byte value has no defined Context.");
-        }
-        
-        @Override
-        public String toString() {
-        	return stringRep;
-        }
-    };
-    
-    /**
-     * The byte values corresponding to the enumerated constants for Context
-     */
-    private final static byte REQ_CONTEXT = 0, RESP_CONTEXT = 1, NO_CONTEXT = 2;
-    
-    /**
      * The designated receiver of the message.
      */
     final private String receiver;
@@ -101,7 +40,7 @@ public class SendMessageRequest extends ProtocolMessage {
     /**
      * The context of the message
      */
-    final private Context messageContext;
+    final private int messageContext;
     
     /**
      * An ArrayList containing the names of all the queues that the message is 
@@ -118,7 +57,7 @@ public class SendMessageRequest extends ProtocolMessage {
      * @param queues Queues that the message are to be sent to.
      * @param receiver The designated receiver.
      */
-    public SendMessageRequest(String message, byte priority, Context context, 
+    public SendMessageRequest(String message, byte priority, int context, 
     		Iterable<String> queues, String receiver) {
     	this.messageType = MessageType.SEND_MESSAGE;
     	
@@ -137,7 +76,7 @@ public class SendMessageRequest extends ProtocolMessage {
      * @param context The context of the message
      * @param queues Queues that the message are to be sent to.
      */
-    public SendMessageRequest(String message, byte priority, Context context,
+    public SendMessageRequest(String message, byte priority, int context,
     		Iterable<String> queues) {
     	this(message, priority, context, queues, null);
     }
@@ -180,7 +119,7 @@ public class SendMessageRequest extends ProtocolMessage {
      * Gets the context of the message
      * @return A Context value indicating the context of the message.
      */
-    public Context getContext() {
+    public int getContext() {
     	return messageContext;
     }
     
@@ -225,12 +164,12 @@ public class SendMessageRequest extends ProtocolMessage {
 		final byte[] messageInBytes = messageContent.getBytes();
 		
 		final ByteBuffer buffer = ByteBuffer.allocate(queuesInBytes.length + receiverInBytes.length +
-				messageInBytes.length + 8);
+				messageInBytes.length + 11);
 		
 		// Put the priority into the buffer
 		buffer.put(messagePriority);
 		// Put the context into the buffer
-		buffer.put(messageContext.getByteValue());
+		buffer.putInt(messageContext);
 		
 		// Put the number of bytes in the queue names and the queue names
 		buffer.putShort((short) queuesInBytes.length);
@@ -256,7 +195,7 @@ public class SendMessageRequest extends ProtocolMessage {
      */
 	public static SendMessageRequest fromBytes(ByteBuffer body) {
 		final byte prio = body.get();
-		final Context cont = Context.fromByte(body.get());
+		final int cont = body.getInt();
 		
 		// Get the queue names
 		byte[] tempArray = new byte[body.getShort()];
