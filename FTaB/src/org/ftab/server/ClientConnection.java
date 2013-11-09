@@ -866,15 +866,27 @@ public class ClientConnection {
 							.execute(msg.getId(), msg.getQueueName(), conn);
 					conn.commit();
 					// TODO: P3
-					LOGGER.log(new ClientConnectionLogRecord(Level.INFO,
-							address, SystemEvent.RETRIEVE_MESSAGE,
+					record = new ClientConnectionLogRecord(address, SystemEvent.RETRIEVE_MESSAGE,
 							"Popped message " + msg.getId() + " from queue "
 									+ msg.getQueueName() + " for " + address
-									+ ".", record));
+									+ ".", record);
+					LOGGER.log(record);
 
 				} else {
 					conn.commit();
 				}
+				
+				LOGGER.log(new ClientConnectionLogRecord(Level.INFO, address,
+						SystemEvent.RETRIEVE_MESSAGE, "Found and returned message "
+								+ msg.getId()
+								+ " filtered by "
+								+ retrieveMessageRequest.getFilterType()
+										.toString()
+								+ " ordered by "
+								+ retrieveMessageRequest.getOrderBy()
+										.toString() + " for " + address + ".",
+						record));
+				
 				RetrieveMessageResponse messageResponse = new RetrieveMessageResponse(
 						msg);
 				return ProtocolMessage.toBytes(messageResponse);

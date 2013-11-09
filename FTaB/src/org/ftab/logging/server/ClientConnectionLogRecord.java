@@ -50,7 +50,7 @@ public class ClientConnectionLogRecord extends ServerLogRecord {
 		super(level, clientAddress, eventCategory, msg, associatedRec);
 		
 		this.clientAddress = clientAddress;
-		this.success = false;
+		this.success = true;
 	}
 
 	/**
