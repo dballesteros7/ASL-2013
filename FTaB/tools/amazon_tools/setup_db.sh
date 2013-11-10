@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Install the PostgreSQL server
+wget http://yum.postgresql.org/9.3/redhat/rhel-6-x86_64/pgdg-redhat93-9.3-1.noarch.rpm
 sudo rpm -iv pgdg-redhat93-9.3-1.noarch.rpm
 sudo yum -qy install postgresql93-server.x86_64
 mkdir postgresql_data
