@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ServerManager>
-    <WorkerThreads>24</WorkerThreads>
-    <ClientsPerWorker>5</ClientsPerWorker>
+    <WorkerThreads>10</WorkerThreads>
+    <ClientsPerWorker>25</ClientsPerWorker>
     <LoggingLevel>INFO</LoggingLevel>
-    <LogOutput>/home/user25/logs/serverlog%g.log</LogOutput>
+    <LogOutput>/home/ec2-user/instance_store/logs/serverlog-%g.log</LogOutput>
     <ListeningPort>34582</ListeningPort>
-    <DatabaseUser>user25</DatabaseUser>
-    <DatabasePassword>dbaccess25</DatabasePassword>
-    <DatabaseServer>dryad05.ethz.ch:5454</DatabaseServer>
+    <DatabaseUser>ec2-user</DatabaseUser>
+    <DatabasePassword></DatabasePassword>
+    <DatabaseServer>ec2-54-194-27-120.eu-west-1.compute.amazonaws.com</DatabaseServer>
     <DatabaseName>main</DatabaseName>
-    <DatabaseConnections>25</DatabaseConnections>
+    <DatabaseConnections>10</DatabaseConnections>
 </ServerManager>

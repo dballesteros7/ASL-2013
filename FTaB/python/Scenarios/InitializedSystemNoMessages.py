@@ -38,7 +38,7 @@ def main(configFile):
 
 if __name__ == '__main__':
     if(len(sys.argv) == 2 and sys.argv[1] == 'help'):
-        print 'Usage: jython %s <path-to-FTaB-jar> <path-to-dbconnect.ini>' % sys.argv[0]
+        print 'Usage: jython %s <path-to-dbconnect.ini>' % sys.argv[0]
     if(len(sys.argv) < 2):
         sys.exit(1)
     sys.exit(main(sys.argv[1]))
