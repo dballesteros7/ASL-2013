@@ -6,6 +6,7 @@ sudo rpm -iv pgdg-redhat93-9.3-1.noarch.rpm
 sudo yum -qy install postgresql93-server.x86_64
 mkdir postgresql_data
 mkdir logs
+PATH=$PATH:/usr/pgsql-9.3./bin/
 
 # Init and start the database server
 /usr/pgsql-9.3/bin/pg_ctl -D postgresql_data/ initdb
