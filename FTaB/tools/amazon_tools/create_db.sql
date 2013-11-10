@@ -1,0 +1,1 @@
+CREATE DATABASE main WITH OWNER = "ec2-user";
