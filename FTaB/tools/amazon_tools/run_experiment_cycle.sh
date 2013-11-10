@@ -1,9 +1,9 @@
 #!/bin/bash
-
+set -e
 # The first argument provides the directory where all the "amazon tools" are located.
 # The second argument provides the directory where the logs should be stored.
 
-bash $1/start_experiment.sh
+bash $1/start_experiment.sh $1/../../../
 
 sleep 2400
 

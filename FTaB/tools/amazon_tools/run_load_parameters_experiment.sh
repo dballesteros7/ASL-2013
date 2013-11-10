@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # For each parameter, we edit the trace config files accordingly and run a experiment_cycle.
 for charNumber in 100 2000
 do
