@@ -12,5 +12,5 @@ CLIENT_E="ec2-54-194-5-224.eu-west-1.compute.amazonaws.com"
 for server in $DB_INSTANCE $SERVER_A $CLIENT_A $CLIENT_B $CLIENT_C $CLIENT_D $CLIENT_E
 do
     echo $server
-    ssh $server "rm -rf *"
+    ssh -t $server "mkdir /home/ec2-user/instance_store; sudo mount -t ext3 /dev/xvdf /home/ec2-user/instance_store/;sudo chown -R ec2-user:ec2-user /home/ec2-user/instance_store"
 done
