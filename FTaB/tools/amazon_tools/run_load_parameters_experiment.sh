@@ -5,9 +5,9 @@ for charNumber in 100 2000
 do
     for queues in 1 10
     do
-        for senders in 120 250
+        for senders in 60 125
         do
-            for readers in 120 250
+            for readers in 60 125
             do
                 sed -i 's/ReaderNumber = .*/ReaderNumber = '"$readers"'/g' $1/config/trace_pilot_clients_1_reads_10.11.ini
                 sed -i 's/ReaderNumber = .*/ReaderNumber = '"$readers"'/g' $1/config/trace_pilot_clients_2_reads_10.11.ini

@@ -72,8 +72,8 @@ def plotAverageResponseTime(logFile, windowSize = 10000):
     return plt, p1
 
 def main():
-    logList = '/home/diegob/logs/pilot-logs/logs/clients-senders-0.log'
-    plotAverageResponseTime(logList, windowSize = 120*1000)[0]
+    logList = '/home/dballesteros/logs/log-100-1-60-60/logs/clients-reader-0.log'
+    plotAverageResponseTime(logList, windowSize = 60*1000)[0]
     plt.show()
     
     #plotAverageResponseTime(logList, eventKeyword = 'READ', windowSize = 120).show()
