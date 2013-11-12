@@ -13,7 +13,7 @@ import threading
 
 from org.ftab.client import Client
 
-class OneWayClient(threading.Thread):
+class ServerClient(threading.Thread):
 
     def __init__(self, clientName, serviceQueue):
         threading.Thread.__init__(self)

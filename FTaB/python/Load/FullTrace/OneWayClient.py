@@ -59,7 +59,7 @@ class OneWayClient(threading.Thread):
         receiver = "Larry%d" % receiver
         queueToSend = random.choice(self.queues)
         context = 0;
-        self.clientInstance.SendMessage(msg, 5, context, [queueToSend], receiver)
+        self.clientInstance.SendMessage(msg, 5, context, receiver, [queueToSend])
         return
 
     def getNextMessage(self):

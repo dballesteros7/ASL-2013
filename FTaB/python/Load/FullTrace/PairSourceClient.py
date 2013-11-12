@@ -16,7 +16,7 @@ import linecache
 
 from org.ftab.client import Client
 
-class BroadcastClient(threading.Thread):
+class PairSourceClient(threading.Thread):
 
     def __init__(self, clientName, msgSize, queue, buddyName):
         threading.Thread.__init__(self)
@@ -39,6 +39,7 @@ class BroadcastClient(threading.Thread):
         msg = self.buildMessage()
         while(self.running):
             self.sendMessage(msg)
+            self.retrieveResponse()
         return
 
     def disconnect(self):
@@ -57,3 +58,8 @@ class BroadcastClient(threading.Thread):
         context = 0
         self.clientInstance.SendMessage(msg, random.randint(1, 10), context, self.buddy, [self.queue])
         return
+
+    def retrieveResponse(self):
+        request = None
+        while request is None and self.running:
+            request = self.clientInstance.ViewMessageFromQueue(self.queue, True)

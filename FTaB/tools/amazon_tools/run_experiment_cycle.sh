@@ -5,7 +5,7 @@ set -e
 
 bash $1/start_experiment.sh $1/../../../
 
-sleep 2400
+sleep 7800
 
 bash $1/stop_machines.sh
 

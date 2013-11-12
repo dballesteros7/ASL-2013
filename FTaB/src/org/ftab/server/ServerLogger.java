@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 
 import org.ftab.logging.formatters.MessageOnlyFormatter;
 import org.ftab.logging.server.filters.SrvEmptyRetrieveFilter;
+import org.ftab.logging.server.filters.SrvQueueFoundFilter;
+import org.ftab.logging.server.filters.SrvQueueNotFoundFilter;
 import org.ftab.logging.server.filters.SrvSendRetFilter;
 import org.ftab.logging.server.formatters.ServerCCDetailRTFormatter;
 import org.ftab.server.exceptions.ConfigurationErrorException;
@@ -104,24 +106,38 @@ public class ServerLogger extends Formatter {
         File RTTFile = new File(file.getParent(), "rtt%g.log");
         File errorLog = new File(file.getParent(), "errorLog%g.log");
         File emptyRetrieveFile = new File(file.getParent(), "emptyret%g.log");
+        File emptyQueueRetrieveFile = new File(file.getParent(), "noqueueret%g.log");
+        File queueFoundFile = new File(file.getParent(), "queuefound%g.log");
         
-        FileHandler errorLogHandler = new FileHandler(errorLog.getAbsolutePath(), 1024 * 1024 * 1024, 10);
+        FileHandler errorLogHandler = new FileHandler(errorLog.getAbsolutePath(), 1024 * 1024 * 1024, 1000);
         errorLogHandler.setLevel(Level.WARNING);
         errorLogHandler.setFormatter(new MessageOnlyFormatter());
         
         logger.addHandler(errorLogHandler);
         
-        FileHandler rttHandler = new FileHandler(RTTFile.getAbsolutePath(), 1024 * 1024 * 1024, 10);
+        FileHandler rttHandler = new FileHandler(RTTFile.getAbsolutePath(), 1024 * 1024 * 1024, 1000);
         rttHandler.setFormatter(new ServerCCDetailRTFormatter());
         rttHandler.setFilter(new SrvSendRetFilter());
         
         logger.addHandler(rttHandler);
         
-        FileHandler emptyRetrHandler = new FileHandler(emptyRetrieveFile.getAbsolutePath(), 1024 * 1024 * 1024, 10);
+        FileHandler emptyRetrHandler = new FileHandler(emptyRetrieveFile.getAbsolutePath(), 1024 * 1024 * 1024, 1000);
         emptyRetrHandler.setFormatter(new ServerCCDetailRTFormatter());
         emptyRetrHandler.setFilter(new SrvEmptyRetrieveFilter());
         
         logger.addHandler(emptyRetrHandler);
+
+        FileHandler emptyQueueRetrHandler = new FileHandler(emptyQueueRetrieveFile.getAbsolutePath(), 1024 * 1024 * 1024, 1000);
+        emptyQueueRetrHandler.setFormatter(new ServerCCDetailRTFormatter());
+        emptyQueueRetrHandler.setFilter(new SrvQueueNotFoundFilter());
+        
+        logger.addHandler(emptyQueueRetrHandler);
+
+        FileHandler queueFoundHandler = new FileHandler(queueFoundFile.getAbsolutePath(), 1024 * 1024 * 1024, 1000);
+        queueFoundHandler.setFormatter(new ServerCCDetailRTFormatter());
+        queueFoundHandler.setFilter(new SrvQueueFoundFilter());
+        
+        logger.addHandler(queueFoundHandler);
     }
 
     /**

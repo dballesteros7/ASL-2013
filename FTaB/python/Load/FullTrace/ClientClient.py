@@ -16,7 +16,7 @@ import linecache
 
 from org.ftab.client import Client
 
-class BroadcastClient(threading.Thread):
+class ClientClient(threading.Thread):
 
     def __init__(self, clientName, msgSize, queue):
         threading.Thread.__init__(self)

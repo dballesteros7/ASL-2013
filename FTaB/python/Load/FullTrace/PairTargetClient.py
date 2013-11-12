@@ -15,14 +15,18 @@ import threading
 
 from org.ftab.client import Client
 
-class OneWayClient(threading.Thread):
 
-    def __init__(self, clientName, serviceQueue):
+class PairTargetClient(threading.Thread):
+
+    DEFAULT_RESPONSE = "Request acknowledged."
+
+    def __init__(self, clientName, serviceQueue, buddyName):
         threading.Thread.__init__(self)
         self.running = False
         self.queue = serviceQueue
         self.name = clientName
         self.clientInstance = Client(self.name)
+        self.buddy = buddyName
         return
 
     def setup(self, ipAddress, port):
@@ -35,6 +39,7 @@ class OneWayClient(threading.Thread):
         self.running = True
         while(self.running):
             self.getNextMessage()
+            self.sendResponse()
         return
 
     def disconnect(self):
@@ -42,4 +47,11 @@ class OneWayClient(threading.Thread):
         return
 
     def getNextMessage(self):
-        self.clientInstance.ViewMessageFromQueue(self.queue, True)
+        request = None
+        while request is None and self.running:
+            request = self.clientInstance.ViewMessageFromQueue(self.queue, True)
+
+    def sendResponse(self):
+        context = 0
+        self.clientInstance.SendMessage(self.DEFAULT_RESPONSE, 10, context, self.buddy, [self.queue])
+        return

@@ -926,7 +926,7 @@ public class ClientConnection {
 	 * @return the buffer with the response.
 	 */
 	private ByteBuffer getQueues(String address) {
-		ClientConnectionLogRecord record = new ClientConnectionLogRecord(
+		ClientConnectionLogRecord record = new ClientConnectionLogRecord(Level.INFO,
 				address, SystemEvent.FETCH_WAITING_QUEUES,
 				"Received request to retrieve queues with pending messages for "
 						+ client.getClientUsername() + " from " + address + ".");
@@ -939,7 +939,7 @@ public class ClientConnection {
 					client.getClientId(), conn);
 			conn.commit();
 			if (result.size() > 0) {
-				LOGGER.log(new ClientConnectionLogRecord(address,
+				LOGGER.log(new ClientConnectionLogRecord(Level.INFO, address,
 						SystemEvent.FETCH_WAITING_QUEUES, "Found "
 								+ result.size()
 								+ " queues with messages waiting for "
@@ -948,10 +948,12 @@ public class ClientConnection {
 				GetQueuesResponse queueResponse = new GetQueuesResponse(result);
 				return ProtocolMessage.toBytes(queueResponse);
 			} else {
-				LOGGER.log(new ClientConnectionLogRecord(address,
-						SystemEvent.FETCH_WAITING_QUEUES,
-						"Did not find any queues with messages waiting for "
-								+ address + ".", record));
+			    record = new ClientConnectionLogRecord(Level.INFO, address,
+                        SystemEvent.FETCH_WAITING_QUEUES,
+                        "Did not find any queues with messages waiting for "
+                                + address + ".", record);
+			    record.setSuccess(false);
+				LOGGER.log(record);
 
 				RequestResponse response = new RequestResponse(Status.NO_QUEUE);
 				return ProtocolMessage.toBytes(response);
