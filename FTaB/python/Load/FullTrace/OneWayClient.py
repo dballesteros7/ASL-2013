@@ -1,12 +1,4 @@
 '''
-This module defines a type of load generator known as a one-way bounce client.
-
-Created on Oct 22, 2013
-
-@author: Diego Ballesteros (diegob)
-'''
-
-'''
 The OneWayClient class implements a client that behaves as follows:
 
 1. Once started, the client will run until it is signaled to stop by changing
@@ -25,32 +17,24 @@ always formatted as Larry%d where %d is an integer counter.
 '''
 
 import random
-import time
-import os
 import threading
 
-from org.ftab.communication.requests.SendMessageRequest import Context
 from org.ftab.client import Client
 
 class OneWayClient(threading.Thread):
 
-    def __init__(self, clientName, possibleQueues, brothers, logPath):
+    def __init__(self, clientName, possibleQueues, brothers):
         threading.Thread.__init__(self)
         self.running = False
         self.queues = possibleQueues
         self.name = clientName
         self.clientInstance = Client(self.name)
-        self.logFile = open(os.path.join(logPath, "%s.log" % self.name), 'w')
         self.brothers = brothers
         return
 
     def setup(self, ipAddress, port):
-        start = time.time()
         result = self.clientInstance.Connect(ipAddress, port)
-        end = time.time()
-        if result:
-            self.logFile.write("CONNECT %s %s\n" % (start, end))
-        else:
+        if not result:
             raise Exception("Failed to connect to server")
         return
 
@@ -63,11 +47,7 @@ class OneWayClient(threading.Thread):
         return
 
     def disconnect(self):
-        start = time.time()
         self.clientInstance.Disconnect()
-        end = time.time()
-        self.logFile.write("DISCONNECT %s %s\n" % (start, end))
-        self.logFile.close()
         return
 
     def buildInitialMessage(self):
@@ -75,37 +55,23 @@ class OneWayClient(threading.Thread):
         return msg
 
     def sendMessageToRandomReceiver(self, msg):
-        receiver = random.randint(0, self.brothers - 1)  # self.brothers includes myself
+        receiver = random.randint(0, self.brothers - 1)
         receiver = "Larry%d" % receiver
         queueToSend = random.choice(self.queues)
-        context = Context.valueOf("NONE");
-        start = time.time()
-        result = self.clientInstance.SendMessage(msg, 5, context, [queueToSend], receiver)
-        end = time.time()
-        if result:
-            self.logFile.write("SEND %s %s\n" % (start, end))
-        else:
-            self.logFile.write("ERROR_SEND %s %s\n" % (start, end))
+        context = 0;
+        self.clientInstance.SendMessage(msg, 5, context, [queueToSend], receiver)
         return
 
     def getNextMessage(self):
         found = False
         result = []
         while not found and self.running:
-            start = time.time()
             result = self.clientInstance.GetWaitingQueues()
-            end = time.time()
             if result:
-                self.logFile.write("QUEUE_FOUND %s %s\n" % (start, end))
                 found = True
-            else:
-                self.logFile.write("NO_QUEUE %s %s\n" % (start, end))
         if found:
-            start = time.time()
             msg = self.clientInstance.ViewMessageFromQueue(result[0], True)
-            end = time.time()
             if msg:
-                self.logFile.write("READ %s %s\n" % (start, end))
                 content = msg.getContent()
                 lines = content.split("\n")
                 lastLine = lines[-2]
