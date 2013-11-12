@@ -1,8 +1,8 @@
 #!/bin/bash
-DB_INSTANCE="ec2-54-194-28-204.eu-west-1.compute.amazonaws.com"
-SERVER_A="ec2-54-194-28-29.eu-west-1.compute.amazonaws.com"
-SERVER_B="ec2-54-194-28-202.eu-west-1.compute.amazonaws.com"
-CLIENT_A="ec2-54-194-26-44.eu-west-1.compute.amazonaws.com"
+DB_INSTANCE="ec2-54-194-13-218.eu-west-1.compute.amazonaws.com"
+SERVER_A="ec2-54-194-35-0.eu-west-1.compute.amazonaws.com"
+SERVER_B="ec2-54-194-22-131.eu-west-1.compute.amazonaws.com"
+CLIENT_A="ec2-54-194-13-53.eu-west-1.compute.amazonaws.com"
 
 # Create a tarred distribution of the project
 cd $1
@@ -25,6 +25,9 @@ ssh $CLIENT_A "source FTaB/tools/amazon_tools/setup_jython.sh"
 # Setup the schema
 ssh $DB_INSTANCE "jython-2.5.3/bin/jython -Dpython.path=FTaB/FTaB.jar:FTaB/python FTaB/python/Deploy/DatabaseDeploy.py Create FTaB/config/dbconnect.ini"
 ssh $DB_INSTANCE "jython-2.5.3/bin/jython -Dpython.path=FTaB/FTaB.jar:FTaB/python FTaB/python/Scenarios/InitializedSystemNoMessages.py FTaB/config/dbconnect.ini"
+
+# Setup the DB monitoring
+ssh $DB_INSTANCE "jython-2.5.3/bin/jython -Dpython.path=FTaB/FTaB.jar:FTaB/python FTaB/python/Monitoring/DatabaseMonitor.py FTaB/config/dbwatchdog.ini &> logs/system.log &"
 
 # Setup the servers
 ssh -t $SERVER_A "source FTaB/tools/amazon_tools/setup_server.sh"
