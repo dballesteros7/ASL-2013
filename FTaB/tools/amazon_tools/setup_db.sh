@@ -12,6 +12,7 @@ PATH=$PATH:/usr/pgsql-9.3./bin/
 /usr/pgsql-9.3/bin/pg_ctl -D postgresql_data/ initdb
 sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" postgresql_data/postgresql.conf
 sed -i "s/host    all             all             127.0.0.1\/32            trust/host    all             all             172.31.0.0\/16            trust/g" postgresql_data/pg_hba.conf
+sed -i "s/max_connections = 100/max_connections = 500/g" postgresql_data/postgresql.conf
 /usr/pgsql-9.3/bin/pg_ctl -D postgresql_data/ -l logs/database.log start
 
 # Create the main database and set appropriate permissions

@@ -25,7 +25,11 @@ def main():
 
     queueBaseName = config.get("System", "QueueBaseName") # Base name of the queues
     availableQueues = int(config.get("System", "ValidQueues")) # Number of valid queues in the system.
-    server = config.get("System", "Server") # Server A
+    serverA = config.get("System", "ServerA") # Server A
+    serverB = config.get("System", "ServerB") # Server A
+    serverC = config.get("System", "ServerC") # Server A
+    serverD = config.get("System", "ServerD") # Server A
+    serverE = config.get("System", "ServerE") # Server A
     port = int(config.get("System", "Port")) # Port for server A
     
     runtime = int(config.get("Trace", "RunningTime")) # Time that the clients are allowed to run for.
@@ -45,7 +49,16 @@ def main():
     clients = []
     for i in xrange(senderNumber):
         client = BroadcastClient("Alice%d" % (i + senderOffset), msgSize, possibleQueues, queuesNumber)
-        client.setup(server, port)
+        if(i + senderOffset) % 5 == 0:
+            client.setup(serverA, port)
+        elif (i + senderOffset) % 5 == 1:
+            client.setup(serverB, port)
+        elif (i + senderOffset) % 5 == 2:
+            client.setup(serverC, port)
+        elif (i + senderOffset) % 5 == 3:
+            client.setup(serverD, port)
+        elif (i + senderOffset) % 5 == 4:
+            client.setup(serverE, port)
         clients.append(client)
 
     for client in clients:

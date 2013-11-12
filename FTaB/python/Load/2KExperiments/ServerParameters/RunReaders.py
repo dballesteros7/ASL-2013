@@ -25,8 +25,12 @@ def main():
 
     queueBaseName = config.get("System", "QueueBaseName") # Base name of the queues
     availableQueues = int(config.get("System", "ValidQueues")) # Number of valid queues in the system.
-    server = config.get("System", "Server") # Server A
-    port = int(config.get("System", "Port")) # Port for server A
+    serverA = config.get("System", "ServerA") # Server A
+    serverB = config.get("System", "ServerB") # Server A
+    serverC = config.get("System", "ServerC") # Server A
+    serverD = config.get("System", "ServerD") # Server A
+    serverE = config.get("System", "ServerE") # Server A
+    port = int(config.get("System", "Port")) # Port for servers
     
     runtime = int(config.get("Trace", "RunningTime")) # Time that the clients are allowed to run for.
     readerNumber = int(config.get("Trace", "ReaderNumber")) # Number of clients to spawn.
@@ -43,7 +47,16 @@ def main():
     clients = []
     for i in xrange(readerNumber):
         client = ReaderClient('Bob%d' % (i + readerOffset), possibleQueues)
-        client.setup(server, port)
+        if(i + readerOffset) % 5 == 0:
+            client.setup(serverA, port)
+        elif (i + readerOffset) % 5 == 1:
+            client.setup(serverB, port)
+        elif (i + readerOffset) % 5 == 2:
+            client.setup(serverC, port)
+        elif (i + readerOffset) % 5 == 3:
+            client.setup(serverD, port)
+        elif (i + readerOffset) % 5 == 4:
+            client.setup(serverE, port)
         clients.append(client)
 
     for client in clients:

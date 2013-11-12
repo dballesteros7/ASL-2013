@@ -7,7 +7,7 @@
     <ListeningPort>34582</ListeningPort>
     <DatabaseUser>ec2-user</DatabaseUser>
     <DatabasePassword></DatabasePassword>
-    <DatabaseServer>ec2-54-194-33-48.eu-west-1.compute.amazonaws.com</DatabaseServer>
+    <DatabaseServer>ec2-54-194-32-29.eu-west-1.compute.amazonaws.com</DatabaseServer>
     <DatabaseName>main</DatabaseName>
     <DatabaseConnections>20</DatabaseConnections>
 </ServerManager>
