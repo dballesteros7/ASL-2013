@@ -3,11 +3,11 @@
     <WorkerThreads>25</WorkerThreads>
     <ClientsPerWorker>2</ClientsPerWorker>
     <LoggingLevel>INFO</LoggingLevel>
-    <LogOutput>/home/ec2-user/instance_store/logs/serverlog-%g.log</LogOutput>
+    <LogOutput>/home/user25/logs/serverlog-%g.log</LogOutput>
     <ListeningPort>34582</ListeningPort>
-    <DatabaseUser>ec2-user</DatabaseUser>
-    <DatabasePassword></DatabasePassword>
-    <DatabaseServer>ec2-54-194-13-218.eu-west-1.compute.amazonaws.com</DatabaseServer>
+    <DatabaseUser>user25</DatabaseUser>
+    <DatabasePassword>dbaccess25</DatabasePassword>
+    <DatabaseServer>dryad09.ethz.ch:5454</DatabaseServer>
     <DatabaseName>main</DatabaseName>
     <DatabaseConnections>25</DatabaseConnections>
 </ServerManager>
