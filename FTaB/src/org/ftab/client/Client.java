@@ -124,12 +124,22 @@ public class Client {
 
 			LOGGER.log(new ClientConnectionRecord(this, record));
 			return true;
-		} catch (IOException | InvalidHeaderException | FullServerException | 
-				 AlreadyOnlineException | UnspecifiedErrorException e) {
+		} catch (IOException e) {
 			LOGGER.log(new ClientConnectionRecord(this, e, record));
 			if (!suppressingErrors) throw e;
-		} 
-		
+		} catch (InvalidHeaderException e) {
+            LOGGER.log(new ClientConnectionRecord(this, e, record));
+            if (!suppressingErrors) throw e;
+        }catch (FullServerException e) {
+            LOGGER.log(new ClientConnectionRecord(this, e, record));
+            if (!suppressingErrors) throw e;
+        }catch (AlreadyOnlineException e) {
+            LOGGER.log(new ClientConnectionRecord(this, e, record));
+            if (!suppressingErrors) throw e;
+        }catch (UnspecifiedErrorException e) {
+            LOGGER.log(new ClientConnectionRecord(this, e, record));
+            if (!suppressingErrors) throw e;
+        } 
 		return false;
 	}
 	
@@ -150,9 +160,12 @@ public class Client {
 		
 			LOGGER.log(new ClientDisconRecord(this, record));
 			return true;
-		} catch (IOException | UnspecifiedErrorException e) {
+		} catch (IOException e) {
 			LOGGER.log(new ClientDisconRecord(this, e, record));
 			if (!suppressingErrors) throw e;
+		} catch (UnspecifiedErrorException e) {
+            LOGGER.log(new ClientDisconRecord(this, e, record));
+            if (!suppressingErrors) throw e;
 		} catch (InvalidHeaderException e) {
 			LOGGER.log(new ClientDisconRecord(this, e, record));
 			if (!suppressingErrors) throw e;
@@ -198,12 +211,22 @@ public class Client {
 			return true;
 		
 			/* Log the failed attempt */
-		} catch (QueueInexistentException | ClientInexistentException | UnspecifiedErrorException 
-				| IOException | InvalidHeaderException e) {
+		} catch (QueueInexistentException e) {
 			LOGGER.log(new SendMsgLogRecord(this, msg, e, record));
 			if (!suppressingErrors) throw e;
-		} 
-		
+		} catch (ClientInexistentException e) {
+            LOGGER.log(new SendMsgLogRecord(this, msg, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (UnspecifiedErrorException e) {
+            LOGGER.log(new SendMsgLogRecord(this, msg, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (IOException e) {
+            LOGGER.log(new SendMsgLogRecord(this, msg, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (InvalidHeaderException e) {
+            LOGGER.log(new SendMsgLogRecord(this, msg, e, record));
+            if (!suppressingErrors) throw e;
+        } 
 		return false;
 	}
 	
@@ -251,11 +274,22 @@ public class Client {
 			
 			LOGGER.log(new QueueDeleteLogRecord(this, queueName, record));
 			return true;
-		} catch (QueueInexistentException | QueueNotEmptyException | UnspecifiedErrorException 
-				| IOException | InvalidHeaderException e) {
+		} catch (QueueInexistentException e) {
 			LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record));
 			if (!suppressingErrors) throw e;
-		} 
+		} catch (UnspecifiedErrorException e) {
+            LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (QueueNotEmptyException e) {
+            LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (IOException e) {
+            LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (InvalidHeaderException e) {
+            LOGGER.log(new QueueDeleteLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } 
 		return false;
 	}
 	
@@ -279,10 +313,19 @@ public class Client {
 			
 			LOGGER.log(new QueueCreateLogRecord(this, queueName, record));
 			return true;
-		} catch (UnspecifiedErrorException | QueueAEException | IOException | InvalidHeaderException e) {
+		} catch (UnspecifiedErrorException e) {
 			LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record));
 			if (!suppressingErrors) throw e;
-		} 
+		}catch (QueueAEException e) {
+            LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (IOException e) {
+            LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (InvalidHeaderException e) {
+            LOGGER.log(new QueueCreateLogRecord(this, queueName, e, record));
+            if (!suppressingErrors) throw e;
+        } 
 		return false;
 	}
 
@@ -305,11 +348,16 @@ public class Client {
 			
 			LOGGER.log(new WaitingQueuesLogRecord(this, result, record));
 			return result;
-		} catch (UnspecifiedErrorException | IOException | InvalidHeaderException e) {
+		} catch (UnspecifiedErrorException  e) {
 			LOGGER.log(new WaitingQueuesLogRecord(this, e, record));
 			if (!suppressingErrors) throw e;
-		}
-		
+		} catch (IOException  e) {
+            LOGGER.log(new WaitingQueuesLogRecord(this, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (InvalidHeaderException  e) {
+            LOGGER.log(new WaitingQueuesLogRecord(this, e, record));
+            if (!suppressingErrors) throw e;
+        }
 		return null;
 	}
 	
@@ -365,11 +413,19 @@ public class Client {
 		} catch (ClientInexistentException e) {
 			// Should never reach here
 			e.printStackTrace();
-		} catch (UnspecifiedErrorException | IOException | InvalidHeaderException e) {
+		} catch (UnspecifiedErrorException e) {
 			LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
 					andRemove, e, record));
 			if (!suppressingErrors) throw e;
-		} 
+		}  catch (IOException e) {
+            LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
+                    andRemove, e, record));
+            if (!suppressingErrors) throw e;
+        } catch (InvalidHeaderException e) {
+            LOGGER.log(new GetMessageLogRecord(this, Filter.QUEUE, queueName, orderedBy, 
+                    andRemove, e, record));
+            if (!suppressingErrors) throw e;
+        }
 		
 		return null;
 	}
@@ -424,12 +480,23 @@ public class Client {
 		} catch (QueueInexistentException e) {
 			// Should never reach here
 			e.printStackTrace();
-		} catch (ClientInexistentException | UnspecifiedErrorException | IOException | InvalidHeaderException e) {
+		} catch (ClientInexistentException  e) {
 			LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
 					andRemove, e, record));
 			if (!suppressingErrors) throw e;
-		} 
-
+		}  catch (UnspecifiedErrorException  e) {
+            LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+                    andRemove, e, record));
+            if (!suppressingErrors) throw e;
+        }catch (IOException  e) {
+            LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+                    andRemove, e, record));
+            if (!suppressingErrors) throw e;
+        }catch (InvalidHeaderException  e) {
+            LOGGER.log(new GetMessageLogRecord(this, Filter.SENDER, senderName, orderedBy, 
+                    andRemove, e, record));
+            if (!suppressingErrors) throw e;
+        }
 		return null;
 	}
 	

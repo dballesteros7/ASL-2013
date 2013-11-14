@@ -32,7 +32,7 @@ public class ClientLogger {
 	public static void addLogStream(String fileName, Filter filter, Formatter formatter) 
 			throws SecurityException, IOException {
 		final Logger logger = Logger.getLogger(Client.class.getName());
-		final FileHandler handler = new FileHandler(fileName, 1024 * 1024 * 512, 10);
+		final FileHandler handler = new FileHandler(fileName, 1024 * 1024 * 512, 1000);
 		
 		if (filter != null) handler.setFilter(filter);
 		handler.setFormatter(formatter);

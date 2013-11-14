@@ -1,25 +1,24 @@
 '''
 This module defines a type of load generator known as a one-way broadcast client.
 
-Created on Oct 27, 2013
-
-@author: Diego Ballesteros (diegob)
-'''
-
-'''
 The BroadcastClient class implements a client that behaves as follows:
 
 1. Once started, the client will run until it is signaled to stop by changing
 its running flag to False. 
 2. During execution, the client will send a message with it's name in the first line and a random english text in the second line. 
 The message size can be configured before starting the client. The sending operation happens as soon as the last message was sent.
-
+3. The message is sent to a random sample of queues from a given initial list and given a fixed size, additionally the priority is
+   an uniformly distributed integer between 1 and 10.
 BroadcastClients are also known as Alice, and their username in the system is
 always formatted as Alice%d where %d is an integer counter.
+
+
+Created on Oct 27, 2013
+
+@author: Diego Ballesteros (diegob)
 '''
 
 import random
-import time
 import os
 import threading
 import linecache
@@ -28,23 +27,19 @@ from org.ftab.client import Client
 
 class BroadcastClient(threading.Thread):
 
-    def __init__(self, clientName, msgSize, possibleQueues, logPath):
+    def __init__(self, clientName, msgSize, possibleQueues, queuesNumber):
         threading.Thread.__init__(self)
         self.running = False
         self.queues = possibleQueues
         self.name = clientName
         self.clientInstance = Client(self.name)
-        self.logFile = open(os.path.join(logPath, "%s.log" % self.name), 'a')
         self.msgSize = msgSize
+        self.kQueues = queuesNumber
         return
 
     def setup(self, ipAddress, port):
-        start = time.time()
         result = self.clientInstance.Connect(ipAddress, port)
-        end = time.time()
-        if result:
-            self.logFile.write("CONNECT %s %s\n" % (start, end))
-        else:
+        if not result:
             raise Exception("Failed to connect to server")
         return
 
@@ -56,15 +51,11 @@ class BroadcastClient(threading.Thread):
         return
 
     def disconnect(self):
-        start = time.time()
         self.clientInstance.Disconnect()
-        end = time.time()
-        self.logFile.write("DISCONNECT %s %s\n" % (start, end))
-        self.logFile.close()
         return
 
     def buildMessage(self):
-        textBasePath = os.path.join(__file__,"..", "Metamorphosis.txt")
+        textBasePath = os.path.join(__file__, "..", "Metamorphosis.txt")
         txt = "%s\n" % self.name
         while(len(txt) < self.msgSize):
             randomLine = random.randint(1, 1900)
@@ -72,13 +63,6 @@ class BroadcastClient(threading.Thread):
         return txt[:self.msgSize]
 
     def sendMessage(self, msg):
-        queueToSend = random.choice(self.queues)
         context = 0;
-        start = time.time()
-        result = self.clientInstance.SendMessage(msg, 5, context, [queueToSend])
-        end = time.time()
-        if result:
-            self.logFile.write("SEND %s %s\n" % (start, end))
-        else:
-            self.logFile.write("ERROR_SEND %s %s\n" % (start, end))
+        self.clientInstance.SendMessage(msg, random.randint(1, 10), context, random.sample(self.queues, self.kQueues))
         return

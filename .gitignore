@@ -24,4 +24,4 @@ FTaB/doc/
 #Test data
 FTaB/data/
 /bin
-*.sql
+*.tgz

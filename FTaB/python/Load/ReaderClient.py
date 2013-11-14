@@ -1,12 +1,4 @@
 '''
-This module defines a type of load generator known as a one-way bounce client.
-
-Created on Oct 27, 2013
-
-@author: Diego Ballesteros (diegob)
-'''
-
-'''
 The ReaderClient class implements a client that behaves as follows:
 
 1. Once started, the client will run until it is signaled to stop by changing
@@ -20,29 +12,24 @@ always formatted as Bob%d where %d is an integer counter.
 
 import random
 import time
-import os
 import threading
 
 from org.ftab.client import Client
 
 class ReaderClient(threading.Thread):
 
-    def __init__(self, clientName, possibleQueues, logPath):
+    def __init__(self, clientName, possibleQueues, pop = True):
         threading.Thread.__init__(self)
         self.running = False
         self.queues = possibleQueues
         self.name = clientName
         self.clientInstance = Client(self.name)
-        self.logFile = open(os.path.join(logPath, "%s.log" % self.name), 'a')
+        self.pop = pop
         return
 
     def setup(self, ipAddress, port):
-        start = time.time()
         result = self.clientInstance.Connect(ipAddress, port)
-        end = time.time()
-        if result:
-            self.logFile.write("CONNECT %s %s\n" % (start, end))
-        else:
+        if not result:
             raise Exception("Failed to connect to server")
         return
 
@@ -53,18 +40,8 @@ class ReaderClient(threading.Thread):
         return
 
     def disconnect(self):
-        start = time.time()
         self.clientInstance.Disconnect()
-        end = time.time()
-        self.logFile.write("DISCONNECT %s %s\n" % (start, end))
-        self.logFile.close()
         return
 
     def getNextMessage(self):
-        start = time.time()
-        msg = self.clientInstance.ViewMessageFromQueue(random.choice(self.queues), False)
-        end = time.time()
-        if msg:
-            self.logFile.write("READ %s %s\n" % (start, end))
-        else:
-            self.logFile.write("MISS %s %s\n" % (start, end))
+        msg = self.clientInstance.ViewMessageFromQueue(random.choice(self.queues), self.pop)
