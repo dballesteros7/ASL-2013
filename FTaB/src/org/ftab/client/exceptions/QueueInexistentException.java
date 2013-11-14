@@ -1,10 +1,10 @@
 package org.ftab.client.exceptions;
 
 /**
- * Exception thrown by the server when a client attempts to refer to a 
- * queue that does not exist.
+ * The exception that is thrown by the server when a queue name
+ * specified in a call does not exist in the system.
  * @author Jean-Pierre Smith
- *
+ * @aslexcludemethods
  */
 @SuppressWarnings("serial")
 public class QueueInexistentException extends FTaBServerException {
@@ -37,6 +37,7 @@ public class QueueInexistentException extends FTaBServerException {
 	 * @return The name of the queue if it was set or null
 	 * if the error was thrown without specifying the name of
 	 * the queue.
+	 * @aslexclude
 	 */
 	public String getQueueName() {
 		return queueName;

@@ -22,6 +22,12 @@ public class RetrieveQueues {
             + "queue LEFT OUTER JOIN msg_queue_assoc "
             + "ON queue_id = id GROUP BY name";
 
+    /**
+     * Retrieves all queues in the system.
+     * @param conn the database connection.
+     * @return An ArrayList of all the queues currently in the system.
+     * @throws SQLException If an error occurs when running the query.
+     */
     public static ArrayList<Queue> execute(Connection conn) throws SQLException {
         PreparedStatement stmt = null;
         ArrayList<Queue> formattedResult = new ArrayList<Queue>();

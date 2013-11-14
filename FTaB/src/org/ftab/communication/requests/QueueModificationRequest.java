@@ -12,11 +12,7 @@ import org.ftab.communication.ProtocolMessage;
 
 
 /**
- * Encapsulates a request to create or delete a queue. The byte array format
- * for the message is:
- * <br><br>
- * | isDelete - 1 byte | # of bytes in queueName - 2 bytes | queue name - n bytes |
- * 
+ * Encapsulates a request to create or delete a queue in the system.
  * @author Jean-Pierre Smith
  */
 public class QueueModificationRequest extends ProtocolMessage {
@@ -47,7 +43,8 @@ public class QueueModificationRequest extends ProtocolMessage {
 	/**
 	 * Gets the queue name of the queue on which the action is
 	 * being performed.
-	 * @return A string identifying the queue 
+	 * @return The name of the queue to be deleted or to assign the
+	 * created queue. 
 	 */
 	public String getQueueName() {
 		return queueName;
@@ -56,7 +53,8 @@ public class QueueModificationRequest extends ProtocolMessage {
 	/**
 	 * Gets a boolean value indicating whether this request is to create or
 	 * delete the named queue.
-	 * @return True to delete the named queue, false to create it.
+	 * @return <b>true</b> to delete the named queue, <b>false</b> to create a
+	 * queue with the supplied name.
 	 */
     public boolean isDelete() {
     	return deleteRequest;
@@ -91,6 +89,7 @@ public class QueueModificationRequest extends ProtocolMessage {
      * @param body A byte array containing the body of the message without
      * any header or type information
      * @return The QueueModificiationRequest object corresponding to the byte array
+     * @aslexclude
      */
 	public static QueueModificationRequest fromBytes(ByteBuffer body) {
 		final boolean delete = body.get() == 1 ? true : false;

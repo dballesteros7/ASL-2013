@@ -11,10 +11,7 @@ import java.nio.ByteBuffer;
 import org.ftab.communication.ProtocolMessage;
 
 /**
- * Encapsulates a connection request from the client to the server.
- * The structure of this message encoded is: <br>
- * | 1 byte - isConnection | 2 bytes - count of bytes for username | n bytes - the username|<br>
- * <br><br>
+ * Encapsulates a client's connection or disconnection request.
  */
 public class ConnectionRequest extends ProtocolMessage {
     /**
@@ -44,7 +41,7 @@ public class ConnectionRequest extends ProtocolMessage {
     }
     
 	/**
-     * Gets the username of the client requesting the connection
+     * Gets the username of the client requesting the connection.
      * @return The username of the client requesting a connection or 
      * null if the request is a disconnection.
      */
@@ -55,8 +52,8 @@ public class ConnectionRequest extends ProtocolMessage {
 	/**
 	 * Gets whether this connection request corresponds to a connection
 	 * or a disconnection of the client from the server.
-	 * @return True if this request encapsulates a connection request, false
-	 * otherwise.
+	 * @return <b>true</b> if this request encapsulates a connection request, <b>false</b>
+	 * if this request is a disconnection request.
 	 */
     public boolean isConnection() {
     	return isConnection;
@@ -99,6 +96,7 @@ public class ConnectionRequest extends ProtocolMessage {
 	 * of the message.
 	 * @return The {@link #ConnectionRequest ConnectionRequest} object represented
 	 * by the byte buffer.
+	 * @aslexclude
 	 */
 	public static ConnectionRequest fromBytes(ByteBuffer body) {
 		final boolean connect = (body.get() == 0) ? false : true;

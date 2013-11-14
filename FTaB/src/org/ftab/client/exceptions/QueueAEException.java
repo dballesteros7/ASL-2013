@@ -1,9 +1,10 @@
 package org.ftab.client.exceptions;
 
 /**
- * An exception that is thrown when a queue is attempted to be created but
- * already exists.
+ * The exception that is thrown when a queue in the system already has 
+ * the name specified to be used to create a new queue.
  * @author Jean-Pierre Smith
+ * @aslexcludemethods
  */
 @SuppressWarnings("serial")
 public class QueueAEException extends FTaBServerException {
@@ -34,8 +35,9 @@ public class QueueAEException extends FTaBServerException {
 	}
 	
 	/**
-	 * Gets the name of the queue which already exists 
+	 * Gets the queue name that already exists in the system 
 	 * @return The name of the queue or null if it already exists.
+	 * @aslexclude
 	 */
 	public String getQueueName() {
 		return queueName;

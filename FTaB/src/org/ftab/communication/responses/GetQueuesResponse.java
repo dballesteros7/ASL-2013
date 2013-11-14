@@ -15,7 +15,8 @@ import org.ftab.communication.ProtocolMessage;
 import org.ftab.communication.requests.GetQueuesRequest;
 
 /**
- * Protocol response after a {@link GetQueuesRequest}.
+ * Encapsulates a response to a org.ftab.communication.requests.GetQueuesRequest
+ * containing the queue names that had messages waiting for the client. 
  */
 public class GetQueuesResponse extends ProtocolMessage {
 
@@ -48,9 +49,9 @@ public class GetQueuesResponse extends ProtocolMessage {
     }
 
     /**
-     * Get an {@link Iterable} container with the queue names.
-     * 
-     * @return collection of queue names.
+     * Get an Iterable container of the names of the queues
+     * with messages waiting for the client.
+     * @return An Iterable over the queue names.
      */
     public Iterable<String> getQueues() {
         return queues;
@@ -64,6 +65,7 @@ public class GetQueuesResponse extends ProtocolMessage {
      *            ByteBuffer generated from a {@link GetQueuesResponse} instance
      *            with the toBytes method.
      * @return response object.
+     * @aslexclude
      */
     public static GetQueuesResponse fromBytes(ByteBuffer input) {
         Charset charset = Charset.forName(CHARSET);

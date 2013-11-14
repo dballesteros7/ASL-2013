@@ -31,8 +31,8 @@ import org.ftab.pubenums.Filter;
 import org.ftab.pubenums.Order;
 
 /**
- * Connects the client to the rest of the system by encapsulating and 
- * making available the interface of the server to the client.
+ * Represents a specific middlewae server and provides an interface of the 
+ * calls that the client can make of the system
  * @author Jean-Pierre Smith
  */
 public class ServerRPC {
@@ -57,10 +57,12 @@ public class ServerRPC {
 	}
 
 	/**
-	 * Connects the client to the server represented by this instance
-	 * @param client The client to connect
-	 * @throws FullServerException If the server is full
-	 * @throws AlreadyOnlineException If the client is already online
+	 * Connects the provided client to the middleware server represented 
+	 * by this instance.
+	 * @param client The client to connect to this server.
+	 * @throws FullServerException If the server is already at full capacity
+	 * @throws AlreadyOnlineException If the client is already online in the
+	 * system
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 * @throws IOException If an error occurred with the channel
 	 * @throws InvalidHeaderException If the input data was somehow corrupted
@@ -101,7 +103,8 @@ public class ServerRPC {
 	}
 	
 	/**
-	 * Disconnects the provided client from this server
+	 * Disconnects the specified client from this server and
+	 * the system.
 	 * @param client The client to be disconnected
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 * @throws IOException If an error occurred with the channel
@@ -124,18 +127,21 @@ public class ServerRPC {
 	}
 	
 	/**
-	 * Tells whether or not there is a connection to this server.
+	 * Ascertains whether there is a connection open with this server.
 	 * @return True if there is a connection, false otherwise.
+	 * @aslexclude
 	 */
 	public boolean isConnectionOpen() {
 		return channelToServer.isConnected();
 	}
 	
 	/**
-	 * Pushes a message onto one or more queues
-	 * @param message The message to be pushed
-	 * @throws QueueInexistentException If at least one of the queues does not exist
-	 * @throws ClientInexistentException If the receiver does not exist
+	 * Pushes a message onto the system.
+	 * @param message The message to be pushed onto the system.
+	 * @throws QueueInexistentException If at least one of the queues specified in the 
+	 * message does not exist in the system.
+	 * @throws ClientInexistentException If the receiver specified in the message does not 
+	 * exist in the system.
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 * @throws IOException If an error occurred with the channel
 	 * @throws InvalidHeaderException If the input data was somehow corrupted
@@ -163,11 +169,11 @@ public class ServerRPC {
 	}
 	
 	/**
-	 * Deletes a queue from the system.	
-	 * @param queueName The name of the queue to delete
+	 * Removes an empty queue from the system.	
+	 * @param queueName The name of the queue to be deleted
 	 * @throws IOException If an error occurred with the channel
 	 * @throws InvalidHeaderException If the input data was somehow corrupted
-	 * @throws QueueInexistentException If the queue to be deleted does not exist
+	 * @throws QueueInexistentException If the queue to be deleted does not exist in the system
 	 * @throws QueueNotEmptyException If the queue to be deleted is not empty
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 */
@@ -192,9 +198,10 @@ public class ServerRPC {
 	}
 	
 	/**
-	 * Creates a queue in the system
-	 * @param queueName The name of the queue to be created
-	 * @throws QueueAEException If the queue already exists
+	 * Creates a new queue in the system with the specified name.
+	 * @param queueName The name to be assigned to the newly created queue
+	 * @throws QueueAEException If a queue with the specified name already exists 
+	 * in the system
 	 * @throws IOException If an error occurred on the channel
 	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
@@ -218,10 +225,11 @@ public class ServerRPC {
 	}
 	
 	/**
-	 * Gets the queues that have messages waiting for a particular client.
-	 * @param client The client for whom queues should be fetched.
-	 * @return An iterable containing the names of the queues that have messages
-	 * waiting or an empty iterable if there are no queues.
+	 * Retrieves the names of the queues that have messages waiting the 
+	 * specified client
+	 * @param client The client for whom queues with waiting messages should be fetched
+	 * @return An Iterable containing the names of the queues that have messages
+	 * waiting
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 * @throws IOException If an error occurred on the channel
 	 * @throws InvalidHeaderException If the response was somehow corrupted
@@ -249,15 +257,20 @@ public class ServerRPC {
 	}
 	
 	/**
-	 * Retrieves a message from the system
+	 * Retrieves a message from the system according to the specified filter and
+	 * ordering.
 	 * @param value The name of the queue or sender to retrieve the message by.
-	 * @param filter Whether to retrieve the message by queue or sender
-	 * @param order Whether to retrieve the message by priority or time 
-	 * @param delete True to delete the message, false otherwise
+	 * @param filter Whether to retrieve a message on a particular queue or sent by
+	 * a particular sender
+	 * @param order Whether to retrieve the message with the highest priority or 
+	 * with the earliest time 
+	 * @param delete <b>true</b> to delete the message on retrieval, <b>false</b> otherwise
 	 * @return The retrieved message object or null if no messages were found that met the criteria.
 	 * @throws IOException If an error occurred on the channel
-	 * @throws QueueInexistentException If the filter specified was a queue and it does not exist
-	 * @throws ClientInexistentException If the filter specified was a sender and it does not exist
+	 * @throws QueueInexistentException If the filter specified was a queue but the specified name
+	 * does not exist in the system as a queue
+	 * @throws ClientInexistentException If the filter specified was a sender but the specified name
+	 * does not exist in the system as a client.
 	 * @throws UnspecifiedErrorException If the server encounter an error but refuses to pass details
 	 * @throws InvalidHeaderException If the response was somehow corrupted
 	 */

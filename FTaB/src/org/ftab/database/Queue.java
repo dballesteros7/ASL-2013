@@ -24,9 +24,9 @@ public class Queue {
     /**
      * Creates a MessageQueue object with the given name and message count.
      * 
-     * @param name
+     * @param nName
      *            name of the queue.
-     * @param messageCount
+     * @param nMessageCount
      *            current number of messages in the queue.
      */
     public Queue(final String nName, final long nMessageCount) {

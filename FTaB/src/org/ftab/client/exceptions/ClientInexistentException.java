@@ -1,9 +1,10 @@
 package org.ftab.client.exceptions;
 
 /**
- * Exception thrown when a specified username does not exist in
- * the system.
+ * The exception that is thrown by the server when a username specified 
+ * as an argument in a server call does not exist in the system.
  * @author Jean-Pierre Smith
+ * @aslexcludemethods
  */
 @SuppressWarnings("serial")
 public class ClientInexistentException extends FTaBServerException {
@@ -38,6 +39,7 @@ public class ClientInexistentException extends FTaBServerException {
 	/**
 	 * Gets the username of the client that prompted the exception.
 	 * @return The name of the client or null if it was not specified.
+	 * @aslexclude
 	 */
 	public String getUsername() {
 		return username;

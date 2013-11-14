@@ -11,8 +11,8 @@ import java.nio.charset.Charset;
 import org.ftab.communication.ProtocolMessage;
 
 /**
- * Protocol response with no detailed content. It can be of several types
- * depending on the outcome of the originating request.
+ * Encapsulates a general response message with flags for operation success or failure.
+ * Also contains any details of the failure such as system specific exceptions.
  */
 public class RequestResponse extends ProtocolMessage {
 
@@ -22,7 +22,9 @@ public class RequestResponse extends ProtocolMessage {
     public final static String SEPARATOR = ";";
 
     /**
-     * Set of possible status of the response.
+     * Enum documenting the possible statuses a RequestResponse message can contain. Included
+     * are statuses for success, exception, full server, no applicable queues, user already online, 
+     * queue not empty, no client, no message, queue already exits, queue does not exist. 
      */
     public enum Status {
         SUCCESS, EXCEPTION, FULL_SERVER, NO_QUEUE, USER_ONLINE,
@@ -65,18 +67,18 @@ public class RequestResponse extends ProtocolMessage {
     }
 
     /**
-     * Get the response status
-     * 
-     * @return response status.
+     * Gets the enumerated value pertaining to the status of
+     * the response.
+     * @return The response status.
      */
     public Status getStatus() {
         return responseStatus;
     }
 
     /**
-     * Get the response description, if any.
+     * Gets the description of the response, if any.
      * 
-     * @return response description.
+     * @return The response description.
      */
     public String getDescription() {
         return responseDescription;
@@ -90,6 +92,7 @@ public class RequestResponse extends ProtocolMessage {
      *            ByteBuffer generated from a {@link RequestResponse} instance
      *            with the toBytes method.
      * @return response object.
+     * @aslexclude
      */
     public static RequestResponse fromBytes(ByteBuffer input) {
         Charset charset = Charset.forName(CHARSET);
