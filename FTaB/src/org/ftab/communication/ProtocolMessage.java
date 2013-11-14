@@ -18,17 +18,21 @@ import org.ftab.communication.responses.RequestResponse;
 import org.ftab.communication.responses.RetrieveMessageResponse;
 
 /**
- * Base class for messages between the client and server. All client-server messages
- * extend this class. Handles the conversion from bytes to an instance of one of its 
- * subclasses. The format of the ProtocolMessage is: <br>
- * 
- * || __HEADER__				|| __MESSAGE_BODY__ 				||<br>
- * || START_MESSAGE | BodySize	|| MessageType	| Message Contents	||<br>
- * || 4 bytes		| 4 bytes	|| 1 byte		| BodySize - 1 bytes||
+ * Base class for all messages sent from the ServerRPC to the remote server. 
+ * This class also handles the the conversion from bytes to an instance of one
+ * of its subclasses. Supported subclasses are:<br>
+ * &emsp;&bull; org.ftab.requests.ConnectionRequest<br>
+ * &emsp;&bull; org.ftab.requests.GetQueuesRequest<br>
+ * &emsp;&bull; org.ftab.requests.QueueModificationRequest<br>
+ * &emsp;&bull; org.ftab.requests.RetrieveMessageRequest<br>
+ * &emsp;&bull; org.ftab.requests.SendMessageRequest<br>
+ * &emsp;&bull; org.ftab.responses.GetQueuesResponse<br>
+ * &emsp;&bull; org.ftab.responses.RequestResponse<br>
+ * &emsp;&bull; org.ftab.responses.RetrieveMessageResponse
  */
 public abstract class ProtocolMessage {
 	/**
-	 * Enumeration defining the type of messages that a {@link org.ftab.communication.ProtocolMessage#ProtocolMessage ProtocolMessage} 
+	 * Enumeration defining the type of messages that a ProtocolMessage 
 	 * can be.
 	 * @author Jean-Pierre Smith
 	 */
@@ -51,7 +55,7 @@ public abstract class ProtocolMessage {
         }
         
         /**
-         * Converts the enumeration constant to a byte value.
+         * Converts the enumeration constant to its byte value.
          * @return The byte value associated with the enumeration.
          */
         public byte getByteValue() {
@@ -70,7 +74,7 @@ public abstract class ProtocolMessage {
         		}
         	}
         	throw new IllegalArgumentException("That byte value has no defined MessageType.");
-        }        
+        }
     };
 
     /**
@@ -101,8 +105,7 @@ public abstract class ProtocolMessage {
     
     /**
      * Returns the message type of this message.
-     * @return The {@link org.ftab.communication.ProtocolMessage.MessageType#MessageType MessageType} 
-     * enumeration corresponding to this message.
+     * @return The MessageType enumerated value corresponding to this message.
      */
     public MessageType getMessageType() {
     	return messageType;
@@ -111,12 +114,11 @@ public abstract class ProtocolMessage {
     /**
      * Returns the size of the body to be read based on the information in the
      * header segment.
-     * @param header A sequence of {@link #HEADER_SIZE HEADER_SIZE} bytes beginning with the
-     * byte array defined by {@link #START_MESSAGE START_MESSAGE}.
+     * @param header A sequence of HEADER_SIZE bytes beginning with the
+     * byte array defined by START_MESSAGE.
      * @return The number of bytes to be read to construct the corresponding message.
      * @throws InvalidHeaderException If the byte array passed does not begin with the byte array
-     * designated by {@link #START_MESSAGE START_MESSAGE} or the array is not 
-     * {@link #HEADER_SIZE HEADER_SIZE} in length. 
+     * designated by START_MESSAGE or the array is not HEADER_SIZE in length. 
      */
     public static int getBodySize(ByteBuffer header) throws InvalidHeaderException{
         // Check that the header has the correct format
@@ -138,9 +140,9 @@ public abstract class ProtocolMessage {
     }
 
     /**
-     * Places a protocol message into a byte buffer.
-     * @param message The message to be placed into a byte buffer.
-     * @return The byte buffer containing the protocol message with its limit set to the end 
+     * Performs serialization on the supplied protocol message.
+     * @param message The ProtocolMessage or subclass to be serialized.
+     * @return A ByteBuffer containing the protocol message with its limit set to the end 
      * of the message and its position set to zero.
      */
     public static ByteBuffer toBytes(ProtocolMessage message) {
@@ -196,7 +198,7 @@ public abstract class ProtocolMessage {
     }
     
     /**
-     * Converts a message into a byte buffer, less the header information.
+     * Serializes this ProtocolMessage excluding its header information.
      * @return A ByteBuffer containing this message with its limit set to the end
      * of the message and its position set to zero.
      */
@@ -204,9 +206,9 @@ public abstract class ProtocolMessage {
      
     
     /**
-     * Retrieves a message from a byte buffer.
-     * @param input  The byte buffer to be read for the message.
-     * @return The message corresponding to the contents in the buffer.
+     * Parses a ByteBuffer to its containing ProtocolMessage.
+     * @param input  The ByteBuffer to be read for the message.
+     * @return The ProtocolMessage corresponding to the contents in the buffer.
      */
     public static ProtocolMessage fromBytes(ByteBuffer input){
         byte mtype = input.get();

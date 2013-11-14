@@ -1,8 +1,3 @@
-/**
- * SendMessageRequest.java
- * Created: 15.10.2013
- * Author: Diego
- */
 package org.ftab.communication.requests;
 
 import java.io.UnsupportedEncodingException;
@@ -13,12 +8,7 @@ import java.util.Arrays;
 import org.ftab.communication.ProtocolMessage;
 
 /**
- * Class representing a request from the client to the server to send a message
- * to a queue or group of queues. The structure of the message is:
- * <br><br>
- * | priority - 1 byte | context - 1 byte | # of bytes in queue names - 2 bytes | queue names - n bytes |<br>
- * | # of bytes in content - 2 bytes | content - m bytes | # of bytes in receiver name - 2 bytes |<br>
- * | receiver name - p bytes |
+ * Represents a request from to send a message to a queue or group of queues.
  * @author Jean-Pierre Smith
  */
 public class SendMessageRequest extends ProtocolMessage {
@@ -82,8 +72,9 @@ public class SendMessageRequest extends ProtocolMessage {
     }
     
     /**
-     * Gets the receiver of the message or null if there is no receiver
-     * @return The name of the receiver of the message or null
+     * Gets the designated receiver of the message
+     * @return The name of the receiver of the message or null if the 
+     * receiver was not specified.
      */
     public String getReceiver() {
     	return receiver;
@@ -92,7 +83,7 @@ public class SendMessageRequest extends ProtocolMessage {
     /**
      * Gets a boolean value that indicates whether a receiver was specified
      * for the message.
-     * @return True if the message has a receiver, false otherwise
+     * @return <b>true</b> if the message has a receiver, <b>false</b> otherwise
      */
     public boolean hasReceiver() {
     	return (receiver != null);
@@ -117,7 +108,7 @@ public class SendMessageRequest extends ProtocolMessage {
     
     /**
      * Gets the context of the message
-     * @return A Context value indicating the context of the message.
+     * @return An integer value indicating the context of the message.
      */
     public int getContext() {
     	return messageContext;
@@ -125,22 +116,14 @@ public class SendMessageRequest extends ProtocolMessage {
     
     /**
      * Gets the queues that the message should be sent to.
-     * @return An iterable object containing the names of the queues.
+     * @return An iterable containing the names of the queues to put the
+     * message upon.
      */
     public Iterable<String> getQueueList() {
     	return deliveryQueues;
     }
     
-    /**
-     * Class representing a request from the client to the server to send a message
-     * to a queue or group of queues. The structure of the message is:
-     * <br><br>
-     * | priority - 1 byte | context - 1 byte | # of bytes in queue names - 2 bytes | queue names - n bytes |<br>
-     * | # of bytes in content - 2 bytes | content - m bytes | # of bytes in receiver name - 2 bytes |<br>
-     * | receiver name - p bytes |
-     * @author Jean-Pierre Smith
-     */
-    
+   
     /**
      * Special character that delimits the names of the queues 
      */
@@ -192,6 +175,7 @@ public class SendMessageRequest extends ProtocolMessage {
      * @param body A byte array containing the body of the message without
      * any header or type information
      * @return The SendMessageRequest object corresponding to the byte array
+     * @aslexclude
      */
 	public static SendMessageRequest fromBytes(ByteBuffer body) {
 		final byte prio = body.get();

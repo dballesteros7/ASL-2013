@@ -1,9 +1,10 @@
 package org.ftab.client.exceptions;
 
 /**
- * Exception that is thrown when a queue was attempted to be deleted
- * but is not empty of messages.
+ * The exception that is thrown when an attempt is made to delete
+ * a queue that is not empty.
  * @author Jean-Pierre Smith
+ * @aslexcludemethods
  */
 @SuppressWarnings("serial")
 public class QueueNotEmptyException extends FTaBServerException {
@@ -37,6 +38,7 @@ public class QueueNotEmptyException extends FTaBServerException {
 	/**
 	 * Gets the name of the queue that was attempted to be deleted.
 	 * @return The name of the queue or null if it was not specified.
+	 * @aslexclude
 	 */
 	public String getQueueName() {
 		return queueName;

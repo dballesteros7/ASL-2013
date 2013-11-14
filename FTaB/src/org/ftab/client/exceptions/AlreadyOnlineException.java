@@ -1,9 +1,10 @@
 package org.ftab.client.exceptions;
 
 /**
- * An exception that is thrown when a client that is currently recorded as being
- * online attempts to log in again.
+ * The exception that is thrown by the server when a client that is 
+ * currently recorded as being online attempts to log in.
  * @author Jean-Pierre Smith
+ * @aslexcludemethods
  */
 @SuppressWarnings("serial")
 public class AlreadyOnlineException extends FTaBServerException {
@@ -34,6 +35,7 @@ public class AlreadyOnlineException extends FTaBServerException {
 	/**
 	 * Gets the username of the client attempting to login but 
 	 * @return The username of the client if it was set. Null otherwise.
+	 * @aslexclude
 	 */
 	public String getUsername() {
 		return username;

@@ -1,9 +1,10 @@
 package org.ftab.client.exceptions;
 
 /**
- * Creates an exception that encapsulates a refusal of the server
- * to accept a connection due to reaching its capacity.
+ * The exception that is thrown when the server is refusing to accept 
+ * a connection due to being at its full capacity.
  * @author Jean-Pierre Smith
+ * @aslexcludemethods
  *
  */
 @SuppressWarnings("serial")
@@ -34,6 +35,7 @@ public class FullServerException extends FTaBServerException {
 	 * Gets the name of the server that refused the connection.
 	 * @return Returns the hostname, or the String form of the address if it doesn't 
 	 * have a hostname (it was created using a literal)
+	 * @aslexclude
 	 */
 	public String getServerName() {
 		return serverName;
@@ -42,6 +44,7 @@ public class FullServerException extends FTaBServerException {
 	/**
 	 * Gets the port that the server is listening on.
 	 * @return The server's port.
+	 * @aslexclude
 	 */
 	public int getServerPort() {
 		return serverPort;

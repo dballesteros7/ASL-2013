@@ -9,14 +9,14 @@ import java.util.ArrayList;
 
 
 /**
- * Encapsulates a message
+ * Encapsulates a message that can be passed from client to server
+ * or vice-versa. 
  */
 public class Message {
 	/**
 	 * Constant representing the ID for a message with no ID.
 	 */
 	private static final int NO_ID = -1;
-	
 	
     /**
      * Id of the message in the database.
@@ -40,7 +40,7 @@ public class Message {
     private final ArrayList<String> queues = new ArrayList<String>();
 
     /**
-     * Context of the message (i.e. None, request, response).
+     * Context of the message
      */
     private final int context;
 
@@ -115,63 +115,62 @@ public class Message {
     }
     
     /**
-     * Getter for the id field.
-     * 
-     * @return message's id or -1 if it was not set
+     * Gets the identification number of the message in
+     * the system. 
+     * @return The message's identification number or or <b>-1</b> 
+     * if it was not set
      */
     public long getId() {
         return id;
     }
 
     /**
-     * Getter for the context field.
-     * 
-     * @return message's context.
+     * Gets the context of this message, where <b>0</b> represents
+     * no context. 
+     * @return The message's context.
      */
     public int getContext() {
         return context;
     }
 
     /**
-     * Getter for the priority field.
-     * 
-     * @return message's priority.
+     * Gets the priority of this message.
+     * @return The message's priority from 1 to 10, 10 being
+     * the highest
      */
     public byte getPriority() {
         return priority;
     }
 
     /**
-     * Getter for the content field.
-     * 
-     * @return message's content.
+     * Gets the content of this message.
+     * @return This message's content.
      */
     public String getContent() {
         return content;
     }
 
     /**
-     * Getter for the sender field.
-     * 
-     * @return message's sender.
+     * Gets the username of the sender of this message.
+     * @return The username of this message's sender.
      */
     public String getSender() {
         return sender;
     }
 
     /**
-     * Gets the queues the message either is to be sent to or
-     * was retrieved from.
-     * @return The list of queue names.
+     * Gets the names of the queues this message either is to be 
+     * sent to or the name of the queue it was retrieved from.
+     * @return A list of queue names.
      */
     public Iterable<String> getQueues() {
 		return queues;
 	}
 
     /**
-     * Getter for the receiver field.
-     * 
-     * @return message's receiver.
+     * Gets the designated receiver of this message.
+     * @return This message's receiver or null if none was
+     * specified.
      */
     public String getReceiver() {
         return receiver;
@@ -203,6 +202,7 @@ public class Message {
     /**
      * Gets a summary of the details of the message
      * @return A string summarising the contents of this messages
+     * @aslexclude
      */
     public String getSummary() {
     	return String.format("Message from %s to %s on %d queues with priority %d, context %d and %d characters",

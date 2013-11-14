@@ -14,8 +14,8 @@ import org.ftab.communication.requests.RetrieveMessageRequest;
 import org.ftab.database.Message;
 
 /**
- * Protocol response with a requested message. It is the response to a
- * {@link RetrieveMessageRequest}.
+ * Encapsulates the system's response to a org.ftab.communication.requests.RetrieveMessageRequest. 
+ * It contains details of the retrieved message.
  */
 public class RetrieveMessageResponse extends ProtocolMessage {
 
@@ -105,73 +105,72 @@ public class RetrieveMessageResponse extends ProtocolMessage {
     }
 
     /**
-     * Get the message id.
+     * Get the identification number of the message in the system.
      * 
-     * @return message id.
+     * @return The message identification number.
      */
     public long getMessageId() {
         return messageId;
     }
 
     /**
-     * Get the message content.
+     * Gets the content of the message.
      * 
-     * @return message content.
+     * @return The text contained within the message.
      */
     public String getMessageContent() {
         return message;
     }
 
     /**
-     * Get the message sender.
+     * Gets the username of the sender of the message.
      * 
-     * @return message sender.
+     * @return The sender's username in the system.
      */
     public String getSender() {
         return sender;
     }
 
     /**
-     * Get the message receiver.
+     * Get the designated receiver of the message.
      * 
-     * @return message receiver.
+     * @return The username of the receiver of the message.
      */
     public String getReceiver() {
         return receiver;
     }
 
     /**
-     * Indicates if the message has a valid receiver, it encapsulates the
-     * definition of a valid receiver.
+     * Indicates whether the message had the receiver specified.
      * 
-     * @return true if the receiver field is not null, false otherwise.
+     * @return <b>true</b> if the receiver field is not null, <b>false</b> otherwise.
      */
     public boolean hasReceiver() {
         return receiver != null;
     }
 
     /**
-     * Get the name of the containing queue.
+     * Get the name of the queue that the message is or was contained in.
      * 
-     * @return name of the containing queue.
+     * @return The name of the containing queue.
      */
     public String getQueue() {
         return queueName;
     }
 
     /**
-     * Get the message priority.
+     * Gets the priority of the message.
      * 
-     * @return message priority.
+     * @return The message's priority from 1 to 10, 10 being the highest.
      */
     public int getPriority() {
         return priority;
     }
 
     /**
-     * Get the context value.
+     * Get the messages context value.
      * 
-     * @return message context.
+     * @return The integer context of the message.
      */
     public int getContext() {
         return context;
@@ -185,6 +184,7 @@ public class RetrieveMessageResponse extends ProtocolMessage {
      *            ByteBuffer generated from a {@link RetrieveMessageResponse}
      *            instance with the toBytes method.
      * @return response object.
+     * @aslexclude
      */
     public static RetrieveMessageResponse fromBytes(ByteBuffer input) {
         Charset charset = Charset.forName(CHARSET);

@@ -10,10 +10,10 @@ import java.nio.ByteBuffer;
 import org.ftab.communication.ProtocolMessage;
 
 /**
- * Encapsulates a request for the queues containing messages for
- * the calling client.<br>
- * As a simple request, the structure for this call is just:<br>
- * | 1 byte - MessageType as byte |
+ * Encapsulates a request for the names of the queues containing 
+ * messages for the calling client.
+ * 
+ * @aslexcludemethods
  */
 public class GetQueuesRequest extends ProtocolMessage {
 	/**

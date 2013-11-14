@@ -103,7 +103,7 @@ public class RetrieveMessage {
      *            otherwise it will be the newest one. true indicates by
      *            priority.
      * @param byQueue
-     *            indicates if argument is a queue or a sender. true indicates
+     *            indicates if argument is a queue or a sender. <b>true</b> indicates
      *            queue.
      * @param conn
      *            database connection.

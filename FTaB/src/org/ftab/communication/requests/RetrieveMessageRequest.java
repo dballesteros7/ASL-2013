@@ -13,14 +13,8 @@ import org.ftab.pubenums.Filter;
 import org.ftab.pubenums.Order;
 
 /**
- * Class that encapsulates a request from the client to the server
- * to retreive a paticular message, either from a queue or by a sender. The
- * format for messages is:
- * <br><br>
- * | Filter - 1 byte | Order - 1 byte | Pop Message? - 1 byte | # of bytes in name - 2 bytes | name - n bytes | 
- * 
+ * Encapsulates a request to retrieve a message from the system.
  * @author Jean-Pierre Smith
- *
  */
 public class RetrieveMessageRequest extends ProtocolMessage {
     /**
@@ -73,15 +67,15 @@ public class RetrieveMessageRequest extends ProtocolMessage {
     /**
      * Gets a value indicating whether to retrieve the message based on priority or the message
      * with the earliest time.
-     * @return A value of Order.Priority to retreive the message by priority or Order.TIMESTAMP to 
-     * retreive the message by time stamp.
+     * @return A value of Order.Priority to retrieve the message by priority or Order.TIMESTAMP to 
+     * retrieve the message by time stamp.
      */
     public Order getOrderBy() {
     	return orderedBy;
     }
     
     /**
-     * A string that represents the queue or sender from which to retreive the message.
+     * A string that represents the queue or sender from which to retrieve the message.
      * @return A string value that either represents a queue or sender's name.
      */
     public String getFilterValue() {
@@ -90,7 +84,7 @@ public class RetrieveMessageRequest extends ProtocolMessage {
 
     /**
      * Whether to pop the message after retrieving it.
-     * @return True to pop the message from the queue, false otherwise.
+     * @return <b>true</b> to pop the message from the queue, <b>false</b> otherwise.
      */
     public boolean isPopMessage() {
 		return popMessage;
@@ -127,6 +121,7 @@ public class RetrieveMessageRequest extends ProtocolMessage {
      * @param body A byte array containing the body of the message without
      * any header or type information
      * @return The RetrieveMessageRequest object corresponding to the byte array
+     * @aslexclude
      */
     public static RetrieveMessageRequest fromBytes(ByteBuffer body) {
     	final Filter filter = Filter.fromByte(body.get());
