@@ -4,8 +4,9 @@ Faster than a Bird (FtaB)
 
 Requirements:
 
-- Java 1.6.0
+- Java 1.7.0
 - Python 2.7.3
+- Jython 2.5.3
 
 How to deploy a server
 
@@ -17,11 +18,13 @@ Example:
 
 [dballesteros@localhost FTaB]$ java -jar FTaB.jar /home/dballesteros/github/ASL-2013/FTaB/manuals/config-example.xml
 
-Oct 16, 2013 10:01:04 PM org.ftab.server.ServerManager start
 
-INFO: Server starting.
+========
+Milestone 1 deliverables:
 
-^CGracefully shutting down the server.
-
-Ready to leave.
+   * Source code, configuration files, scripts are located in FTaB/src, FTaB/config, FTaB/tools and FTaB/python respectively.
+   * The experiment configurations are in FTaB/config and the scripts used to run them in FTaB/tools. Some plots of the results are in FTaB/results.
+   * The report is found in FTaB/milestone1/report.
+   * The presentation is found in FTaB/milestone1/presentation/
+   * The data is available in FTaB/data/
 
