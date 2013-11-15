@@ -25,10 +25,66 @@ public class RequestResponse extends ProtocolMessage {
      * Enum documenting the possible statuses a RequestResponse message can contain. Included
      * are statuses for success, exception, full server, no applicable queues, user already online, 
      * queue not empty, no client, no message, queue already exits, queue does not exist. 
+     * @aslincludefields
      */
     public enum Status {
-        SUCCESS, EXCEPTION, FULL_SERVER, NO_QUEUE, USER_ONLINE,
-        QUEUE_NOT_EMPTY, NO_CLIENT, NO_MESSAGE, QUEUE_EXISTS, QUEUE_NOT_EXISTS
+    	/**
+         * Marks that the call generating this request was a success.
+         */
+        SUCCESS, 
+        
+        /**
+         * Marks that the call generating this request failed for a unexpected
+         * reason.
+         */
+        EXCEPTION, 
+        
+        /**
+         * Marks that the connection call failed due to the server being
+         * at full capcacity
+         */
+        FULL_SERVER, 
+        
+        /**
+         * Marks that a call requesting queues with messages waiting resulted
+         * in no queues.
+         */
+        NO_QUEUE, 
+        
+        /**
+         * Marks that the call requesting to login a user failed due to the 
+         * user already being online.
+         */
+        USER_ONLINE,
+        
+        /**
+         * Marks that the call requesting the deletion of a queue failed due
+         * to the queue not being empty.
+         */
+        QUEUE_NOT_EMPTY, 
+        
+        /**
+         * Marks that in a call involving a client, the specified client does
+         * not exist in the system.
+         */
+        NO_CLIENT, 
+        
+        /**
+         * Marks that for a call to retrieve a message, no messages were found. 
+         */
+        NO_MESSAGE, 
+        
+        /**
+         * Marks that the call to create a queue failed due to the queue already
+         * existing.
+         */
+        QUEUE_EXISTS, 
+        
+        /**
+         * Marks that in a call involving a queue, the specified queue does not
+         * exist in the system. 
+         */
+        QUEUE_NOT_EXISTS
     };
 
     /**

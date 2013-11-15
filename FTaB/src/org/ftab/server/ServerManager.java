@@ -58,7 +58,6 @@ public class ServerManager implements Runnable {
      */
     private final String serverName;
     
-    
     /**
      * List of current active workers. TODO: Currently the workers don't die,
      * correct that and implement a guard for the list so it can be modified by

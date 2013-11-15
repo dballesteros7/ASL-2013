@@ -141,7 +141,7 @@ public final class ClientShell {
 		ClientLogger.addLogStream("C:\\logs\\clientlog%g.log", null, new MessageOnlyFormatter());
 		
 		client = new Client(getUsernameFromConsole());
-		client.setSuppressingErrors(args.length > 0 ? Boolean.parseBoolean(args[0]) : false);
+		client.setSuppressingErrors(args.length > 0 ? Boolean.parseBoolean(args[0]) : true);
 		
 		while (true) {
 			switch (getMainMenuSelection()) {

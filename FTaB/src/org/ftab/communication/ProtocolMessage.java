@@ -35,11 +35,55 @@ public abstract class ProtocolMessage {
 	 * Enumeration defining the type of messages that a ProtocolMessage 
 	 * can be.
 	 * @author Jean-Pierre Smith
+	 * @aslincludefields
 	 */
 	public enum MessageType {
-        CONNECTION_REQUEST(CON_REQ), QUEUE_MODIFICATION(QUE_MOD), SEND_MESSAGE(SEND_MSG), RETRIEVE_MESSAGE(RETR_MSG), 
-        RETRIEVE_QUEUES(RETR_QUE), REQUEST_RESPONSE(REQ_RESP), RETURNED_MESSAGES(RETU_MSG), 
-        RETURNED_QUEUE(RETU_QUE); // MESSAGE_RECEIVED(MSG_REC), 
+		/** 
+		 * Marks that the message body contains a message requesting a 
+		 * connection or disconnection.
+		 */
+        CONNECTION_REQUEST(CON_REQ), 
+        
+        /**
+         * Marks that the message body contains a message requesting a
+         * queue modification action.
+         */
+        QUEUE_MODIFICATION(QUE_MOD), 
+        
+        /**
+         * Marks that the message body contains a message requesting to
+         * send a message.
+         */
+        SEND_MESSAGE(SEND_MSG), 
+        
+        /**
+         * Marks that the message body contains a message requesting to
+         * retrieve a message.
+         */
+        RETRIEVE_MESSAGE(RETR_MSG),
+        
+        /**
+         * Marks that the message body contains a message requesting to
+         * retrieve queues with messages waiting.
+         */
+        RETRIEVE_QUEUES(RETR_QUE), 
+        
+        /**
+         * Marks that the message body contains a generic request response.
+         */
+        REQUEST_RESPONSE(REQ_RESP), 
+        
+        /**
+         * Marks that the message body contains a the
+         * requested message.
+         */
+        RETURNED_MESSAGES(RETU_MSG),
+        
+        /**
+         * Marks that the message body contains the requested list of
+         * queues.
+         */
+        RETURNED_QUEUE(RETU_QUE);  
         
         /**
          * The associated byte value for an enum constant
