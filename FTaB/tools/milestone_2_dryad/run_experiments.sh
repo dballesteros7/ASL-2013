@@ -1,11 +1,11 @@
 #!/bin/bash
 
-SERVER="dryad06.ethz.ch"
-CLIENT="dryad07.ethz.ch"
+SERVER="dryad02.ethz.ch"
+CLIENT="dryad03.ethz.ch"
 
 USER_COUNT=10
 FIXED_DISTRIBUTION_SIZE=0.2
-for USER_COUNT in 5 10 20 30 40 50 70 80 100
+for USER_COUNT in 70 80 100
 do
     for FIXED_DISTRIBUTION_SIZE in 0.2 0.5 1 2
     do
