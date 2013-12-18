@@ -296,7 +296,7 @@ h2 = line(N, responsetime_averages(4,:));
 hTitle  = title ('Response time (Model vs Experimental)');
 hXLabel = xlabel('Number of clients');
 hYLabel = ylabel('Expected response time (ms)');
-hLegend = legend([h, h2], 'S_{io} = 100\mus', 'S_{io} = 500\mus','S_{io} = 1ms','S_{io} = 2ms','Experimental (read)');
+hLegend = legend([h, h2], 'S_{io} = 100\mus', 'S_{io} = 500\mus','S_{io} = 1ms','S_{io} = 2ms','Experimental');
 set(hLegend, 'location', 'NorthWest');
 set([hTitle, hXLabel, hYLabel], 'FontName','Helvetica');
 set([hXLabel, hYLabel], 'FontSize', 14);
