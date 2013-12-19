@@ -107,7 +107,7 @@ def generate_table_throughput(root_dir, output_file):
     is empty. The value in each position i,j is a single scalar value.
     '''
     client_numbers = [250]
-    thread_counts = [1, 2, 4, 5, 10, 20, 25, 50]
+    thread_counts = [1, 2, 4, 5, 10, 20]
     result_read_matrix = {}
     result_write_matrix = {}
     for client_number in client_numbers:
@@ -147,8 +147,8 @@ def generate_table_throughput(root_dir, output_file):
     return
 
 def main():
-    generate_table_time('/home/diegob/workspace/data_milestone_2/Experiment_2/clients/', '/home/diegob/workspace/data_milestone_2/Experiment_2/statistics_responsetime_2', True)
-    generate_table_time('/home/diegob/workspace/data_milestone_2/Experiment_2/server/', '/home/diegob/workspace/data_milestone_2/Experiment_2/statistics_servicetime_2', False)
+    #generate_table_time('/home/diegob/workspace/data_milestone_2/Experiment_2/clients/', '/home/diegob/workspace/data_milestone_2/Experiment_2/statistics_responsetime_2', True)
+    #generate_table_time('/home/diegob/workspace/data_milestone_2/Experiment_2/server/', '/home/diegob/workspace/data_milestone_2/Experiment_2/statistics_servicetime_2', False)
     generate_table_throughput('/home/diegob/workspace/data_milestone_2/Experiment_2/clients/', '/home/diegob/workspace/data_milestone_2/Experiment_2/throughput_2')
 
 if __name__ == '__main__':

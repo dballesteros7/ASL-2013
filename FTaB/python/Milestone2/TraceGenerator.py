@@ -27,8 +27,14 @@ def main():
     portA = int(config.get("system", "porta")) # Port for server A
     serverB = config.get("system", "serverb") # Server B
     portB = int(config.get("system", "portb")) # Port for server B
-    servers = int(config.get("system", "numberofservers")) # Number of servers to use (1-2)
-    
+    serverC = config.get("system", "serverc") # Server C
+    portC = int(config.get("system", "portc")) # Port for server C
+    serverD = config.get("system", "serverd") # Server D
+    portD = int(config.get("system", "portd")) # Port for server D
+    serverE = config.get("system", "servere") # Server E
+    portE = int(config.get("system", "porte")) # Port for server E
+    servers = int(config.get("system", "numberofservers")) # Number of servers to use (2-5)
+
     runtime = int(config.get("trace", "runningtime")) # Time that the clients are allowed to run for.
     senderNumber = int(config.get("trace", "sendernumber")) # Number of senders to spawn.
     readerNumber = int(config.get("trace", "readernumber")) # Number of readers to spawn.
@@ -51,18 +57,30 @@ def main():
     while assignedReaders < readerNumber or assignedSenders < senderNumber:
         if assignedReaders < readerNumber:
             client = Reader('Bob%d' % assignedReaders, possibleQueues, distributionClass)
-            if servers == 1 or (assignedReaders % 2 == 0):
+            if (servers == 2 and assignedReaders % 2 == 0) or (servers == 5 and assignedReaders % 5 == 0):
                 client.connect(serverA, portA)
-            else:
+            elif (servers == 2 and assignedReaders % 2 == 1) or (servers == 5 and assignedReaders % 5 == 1):
                 client.connect(serverB, portB)
+            elif (servers == 5 and assignedReaders % 5 == 2):
+                client.connect(serverC, portC)
+            elif (servers == 5 and assignedReaders % 5 == 3):
+                client.connect(serverD, portD)
+            else:
+                client.connect(serverE, portE)
             clients.append(client)
             assignedReaders += 1
         if assignedSenders < senderNumber:
             client = Sender('Alice%d' % assignedSenders, possibleQueues, distributionClass)
-            if servers == 1 or (assignedSenders % 2 == 0):
+            if (servers == 2 and assignedSenders % 2 == 0) or (servers == 5 and assignedSenders % 5 == 0):
                 client.connect(serverA, portA)
-            else:
+            elif (servers == 2 and assignedSenders % 2 == 1) or (servers == 5 and assignedSenders % 5 == 1):
                 client.connect(serverB, portB)
+            elif (servers == 5 and assignedSenders % 5 == 2):
+                client.connect(serverC, portC)
+            elif (servers == 5 and assignedSenders % 5 == 3):
+                client.connect(serverD, portD)
+            else:
+                client.connect(serverE, portE)
             clients.append(client)
             assignedSenders += 1
 

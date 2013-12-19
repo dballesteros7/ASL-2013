@@ -7,7 +7,7 @@
     <ListeningPort>34582</ListeningPort>
     <DatabaseUser>user25</DatabaseUser>
     <DatabasePassword>dbaccess25</DatabasePassword>
-    <DatabaseServer>dryad05.ethz.ch:5454</DatabaseServer>
+    <DatabaseServer>dryad01.ethz.ch:5454</DatabaseServer>
     <DatabaseName>main</DatabaseName>
     <DatabaseConnections>5</DatabaseConnections>
 </ServerManager>
