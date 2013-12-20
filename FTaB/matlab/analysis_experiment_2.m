@@ -37,6 +37,30 @@ for i = 2:5
     end
 end
 
+responsetime_read_2 = import_statistics_experiment_1('statistics_responsetime_2_read.csv');
+responsetime_send_2 = import_statistics_experiment_1('statistics_responsetime_2_send.csv');
+responsetime_averages_2 = zeros(8, 1);
+
+for i = 2:9
+    for j = 2:2
+        string_value_read = responsetime_read_2{i,j};
+        string_cells_read = strsplit(string_value_read, ':');
+        string_value_send = responsetime_send_2{i,j};
+        string_cells_send = strsplit(string_value_send, ':');
+        responsetime_averages_2(i - 1, j - 1) = mean([str2double(string_cells_send{1}), str2double(string_cells_read{1})]);
+    end
+end
+
+throughput_read_2 = import_throughput_experiment_1('throughput_2_read.csv');
+throughput_send_2 = import_throughput_experiment_1('throughput_2_send.csv');
+throughput_total_2 = zeros(8, 1);
+
+for i = 2:9
+    for j = 2:2
+        throughput_total_2(i - 1, j - 1) = throughput_read_2(i,j) + throughput_send_2(i,j);
+    end
+end
+
 %% Mean value analysis for using optimal parameters from single queue analysis (i.e. S_io = 500\mus)
 
 T = [2, 5, 10, 20];
@@ -385,7 +409,10 @@ for i = 1:8
 end
 
 h1 = line(T, E_r);
-hTitle  = title ('Model response time (N = 500)');
+h2 = line(T, responsetime_averages_2);
+hLegend = legend([h1, h2], 'Model','Experimental');
+set(hLegend, 'location', 'NorthWest');
+hTitle  = title ('Model and experimental response time (N = 500)');
 hXLabel = xlabel('Number of threads');
 hYLabel = ylabel('Expected response time (ms)');
 set([hTitle, hXLabel, hYLabel], 'FontName','Helvetica');
@@ -412,13 +439,21 @@ set(h1                        , ...
   'MarkerSize'      , 8, ...
   'Color' , [0	201	87]/255);
 
-set(gcf, 'PaperPositionMode', 'auto');
-%print(gcf, '-depsc2', 'exp2_response_time_model_3_1.eps')
-%close;
-figure;
-h1 = line(T, E_x);
+set(h2                        , ...
+  'LineWidth'       , 2 ,...
+  'Marker'          , 'x'         , ...
+  'MarkerSize'      , 8);
 
-hTitle  = title ('Model throughput (N = 500)');
+
+set(gcf, 'PaperPositionMode', 'auto');
+print(gcf, '-depsc2', 'exp2_response_time_model_3_2.eps')
+close;
+%figure;
+h1 = line(T, E_x);
+h2 = line(T, throughput_total_2);
+hLegend = legend([h1, h2], 'Model','Experimental');
+set(hLegend, 'location', 'NorthWest');
+hTitle  = title ('Model and experimental throughput (N = 500)');
 hXLabel = xlabel('Number of worker threads');
 hYLabel = ylabel('Throughput (ops/s)');
 set([hTitle, hXLabel, hYLabel], 'FontName','Helvetica');
@@ -445,6 +480,11 @@ set(h1                        , ...
   'MarkerSize'      , 8, ...
   'Color' , [0	201	87]/255);
 
+set(h2                        , ...
+  'LineWidth'       , 2 ,...
+  'Marker'          , 'x'         , ...
+  'MarkerSize'      , 8);
+
 set(gcf, 'PaperPositionMode', 'auto');
-%print(gcf, '-depsc2', 'exp2_throughput_model_3_1.eps')
-%close;
+print(gcf, '-depsc2', 'exp2_throughput_model_3_2.eps')
+close;
